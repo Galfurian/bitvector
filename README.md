@@ -1,0 +1,2 @@
+# BitVector
+Templatic BitVector class.
