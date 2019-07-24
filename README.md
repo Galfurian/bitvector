@@ -25,5 +25,5 @@ make
 ## Execute
 After compling, you can run the example:
 ```
-
+./test_bitvector
 ``` 
