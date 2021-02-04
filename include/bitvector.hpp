@@ -48,7 +48,7 @@ public:
             bits[it] = false;
     }
 
-    BitVector(long unsigned int value)
+    explicit BitVector(long unsigned int value)
         : bits()
     {
         for (long unsigned int i = 0; i < N; ++i) {
@@ -57,21 +57,19 @@ public:
         }
     }
 
-    BitVector(std::string str)
+    explicit BitVector(const std::string &str)
         : bits()
     {
-        if (N > str.length())
-            str.insert(0, std::string(N - str.length(), '0'));
-        for (long it = N - 1; it >= 0; --it)
-            bits[it] = (str[it] == '1');
+        for (std::string::size_type it = 0, len = str.length(); it < len; ++it)
+            bits[N - 1 - it] = (str[len - 1 - it] == '1');
     }
 
     template <long unsigned int N2>
-    BitVector(BitVector<N2> const &other)
+    explicit BitVector(BitVector<N2> const &other)
         : bits()
     {
         for (long it = 0; it < N; ++it)
-            (*this)[it] = (it < N2) ? other[it] : false;
+            (*this)[it] = (it < N2) && other[it];
     }
 
     /// @brief Returns a bitvector of all ones.
