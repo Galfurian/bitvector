@@ -106,7 +106,7 @@ public:
     }
 
     /// @brief Sets the given bit to false.
-    inline BitVector<N> &reset(size_t position)
+    inline BitVector<N> &reset(size_type position)
     {
         assert(position < N);
         (*this)[position] = false;
@@ -122,7 +122,7 @@ public:
     }
 
     /// @brief Flips a given bit.
-    inline BitVector<N> &flip(size_t position)
+    inline BitVector<N> &flip(size_type position)
     {
         assert(position < N);
         (*this)[position] = !(*this)[position];
@@ -130,15 +130,15 @@ public:
     }
 
     /// @brief Returns the size of the bit-vector.
-    inline size_t size() const
+    inline size_type size() const
     {
         return N;
     }
 
     /// @brief Returns the number of bits which are set.
-    inline size_t count() const
+    inline size_type count() const
     {
-        size_t result = 0;
+        size_type result = 0;
         for (size_type it = 0; it < N; ++it)
             result += bits[it];
         return result;
@@ -184,7 +184,7 @@ public:
     }
 
     /// @brief Swaps the bits from 'start' to 'end'.
-    inline BitVector<N> &swap(size_t start = 0, size_t end = N - 1)
+    inline BitVector<N> &swap(size_type start = 0, size_type end = N - 1)
     {
         do std::swap(bits[start], bits[end]);
         while (start++ < end--);
@@ -244,28 +244,28 @@ public:
     }
 
     /// @brief Returns a reference to the bit at the given position.
-    inline bool &at(size_t position)
+    inline bool &at(size_type position)
     {
         assert(position < N);
         return bits[N - position - 1];
     }
 
     /// @brief Returns the bit at the given position.
-    inline bool at(size_t position) const
+    inline bool at(size_type position) const
     {
         assert(position < N);
         return bits[N - position - 1];
     }
 
     /// @brief Returns a reference to the bit at the given position.
-    inline bool &operator[](size_t position)
+    inline bool &operator[](size_type position)
     {
         assert(position < N);
         return bits[N - position - 1];
     }
 
     /// @brief Returns the bit at the given position.
-    inline bool operator[](size_t position) const
+    inline bool operator[](size_type position) const
     {
         assert(position < N);
         return bits[N - position - 1];
@@ -427,10 +427,10 @@ public:
         remainder = (*this);
         support   = rhs;
         // Count significant digits in lhs and rhs and dividend.
-        size_t sig_lhs = most_significant_bit(*this);
-        size_t sig_rhs = most_significant_bit(rhs);
+        size_type sig_lhs = most_significant_bit(*this);
+        size_type sig_rhs = most_significant_bit(rhs);
         // Align the y with the dividend.
-        size_t n = (sig_lhs - sig_rhs);
+        size_type n = (sig_lhs - sig_rhs);
         support <<= n;
         // Make sure the loop executes the right number of times.
         n += 1;
@@ -469,10 +469,10 @@ public:
             return qotient;
         BitVector<MAX_SIZE> remainder(*this), x(*this), y(rhs);
         // Count significant digits in y and dividend.
-        size_t sig_x = most_significant_bit(x);
-        size_t sig_y = most_significant_bit(y);
+        size_type sig_x = most_significant_bit(x);
+        size_type sig_y = most_significant_bit(y);
         // Align the y with the dividend.
-        size_t n = (sig_x - sig_y);
+        size_type n = (sig_x - sig_y);
         y <<= n;
         // Make sure the loop executes the right number of times.
         n += 1;
@@ -497,7 +497,7 @@ public:
     }
 
     /// @brief Right-shifts this BitVector by the given number of bits.
-    inline BitVector<N> operator>>(size_t shift) const
+    inline BitVector<N> operator>>(size_type shift) const
     {
         BitVector<N> result = (*this);
         result >>= shift;
@@ -506,12 +506,12 @@ public:
 
     /// @brief Right-shifts this BitVector by the given number of bits,
     /// modifying this BitVector.
-    inline BitVector<N> &operator>>=(size_t shift)
+    inline BitVector<N> &operator>>=(size_type shift)
     {
         if (shift > 0) {
-            for (long it = N - 1; it >= shift; --it)
+            for (size_type it = shift; it < N; ++it)
                 bits[it] = bits[it - shift];
-            for (long it = 0; it < shift; ++it)
+            for (size_type it = 0; it < shift; ++it)
                 bits[it] = false;
         }
         return (*this);
@@ -520,13 +520,13 @@ public:
     /// @brief Left-shifts this BitVector by the given number of bits. It uses
     ///         the `support` bitvector to store the result.
     template <size_type N2>
-    inline BitVector<N2> &shift_right(size_t shift, BitVector<N2> &support) const
+    inline BitVector<N2> &shift_right(size_type shift, BitVector<N2> &support) const
     {
         return ((support = (*this)) >>= shift);
     }
 
     /// @brief Left-shifts this BitVector by the given number of bits.
-    inline BitVector<N> operator<<(size_t shift) const
+    inline BitVector<N> operator<<(size_type shift) const
     {
         BitVector<N> result = (*this);
         result <<= shift;
@@ -535,12 +535,12 @@ public:
 
     /// @brief Left-shifts this BitVector by the given number of bits,
     /// modifying this BitVector.
-    inline BitVector<N> &operator<<=(size_t shift)
+    inline BitVector<N> &operator<<=(size_type shift)
     {
         if (shift > 0) {
-            for (size_t it = 0; it < (N - shift); ++it)
+            for (size_type it = 0; it < (N - shift); ++it)
                 bits[it] = bits[it + shift];
-            for (size_t it = (N - shift); it < N; ++it)
+            for (size_type it = (N - shift); it < N; ++it)
                 bits[it] = false;
         }
         return (*this);
@@ -549,7 +549,7 @@ public:
     /// @brief Left-shifts this BitVector by the given number of bits. It uses
     //    ///         the `support` bitvector to store the result.
     template <size_type N2>
-    inline BitVector<N2> &shift_left(size_t shift, BitVector<N2> &support) const
+    inline BitVector<N2> &shift_left(size_type shift, BitVector<N2> &support) const
     {
         return ((support = (*this)) <<= shift);
     }
@@ -558,9 +558,9 @@ public:
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
     inline bool operator==(BitVector<N2> const &rhs) const
     {
-        for (int it = MAX(N, N2) - 1; it >= 0; --it) {
-            bool a = (it < N) ? (*this)[it] : false;
-            bool b = (it < N2) ? rhs[it] : false;
+        for (size_type it = MAX(N, N2); it > 0; --it) {
+            bool a = ((it - 1) < N) ? (*this)[it - 1] : false;
+            bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
             if (a != b)
                 return false;
         }
@@ -577,9 +577,9 @@ public:
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
     inline bool operator!=(BitVector<N2> const &rhs) const
     {
-        for (int it = MAX_SIZE - 1; it >= 0; --it) {
-            bool a = (it < N) ? (*this)[it] : false;
-            bool b = (it < N2) ? rhs[it] : false;
+        for (size_type it = MAX_SIZE; it > 0; --it) {
+            bool a = ((it - 1) < N) ? (*this)[it - 1] : false;
+            bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
             if (a != b)
                 return true;
         }
@@ -596,9 +596,9 @@ public:
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
     inline bool operator<(BitVector<N2> const &rhs) const
     {
-        for (int it = MAX_SIZE - 1; it >= 0; --it) {
-            bool a = (it < N) ? (*this)[it] : false;
-            bool b = (it < N2) ? rhs[it] : false;
+        for (size_type it = MAX_SIZE; it > 0; --it) {
+            bool a = ((it - 1) < N) ? (*this)[it - 1] : false;
+            bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
             if (a && !b)
                 return false;
             if (!a && b)
@@ -617,9 +617,9 @@ public:
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
     inline bool operator>(BitVector<N2> const &rhs) const
     {
-        for (int it = MAX_SIZE - 1; it >= 0; --it) {
-            bool a = (it < N) ? (*this)[it] : false;
-            bool b = (it < N2) ? rhs[it] : false;
+        for (size_type it = MAX_SIZE; it > 0; --it) {
+            bool a = ((it - 1) < N) ? (*this)[it - 1] : false;
+            bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
             if (!a && b)
                 return false;
             if (a && !b)
@@ -638,9 +638,9 @@ public:
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
     inline bool operator<=(BitVector<N2> const &rhs)
     {
-        for (int it = MAX_SIZE - 1; it >= 0; --it) {
-            bool a = (it < N) ? (*this)[it] : false;
-            bool b = (it < N2) ? rhs[it] : false;
+        for (size_type it = MAX_SIZE; it > 0; --it) {
+            bool a = ((it - 1) < N) ? (*this)[it - 1] : false;
+            bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
             if (a && !b)
                 return false;
             if (!a && b)
@@ -659,9 +659,9 @@ public:
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
     inline bool operator>=(BitVector<N2> const &rhs)
     {
-        for (int it = MAX_SIZE - 1; it >= 0; --it) {
-            bool a = (it < N) ? (*this)[it] : false;
-            bool b = (it < N2) ? rhs[it] : false;
+        for (size_type it = MAX_SIZE; it > 0; --it) {
+            bool a = ((it - 1) < N) ? (*this)[it - 1] : false;
+            bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
             if (!a && b)
                 return false;
             if (a && !b)

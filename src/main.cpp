@@ -31,11 +31,11 @@
                   << "\n";                                                         \
     }
 
-template <long unsigned int N>
+template <unsigned long N>
 struct test_bv_pair_t {
     BitVector<N> bitVector;
-    long unsigned int original;
-    test_bv_pair_t(long unsigned int _original)
+    unsigned long original;
+    test_bv_pair_t(unsigned long _original)
         : bitVector(_original),
           original(_original)
     {
@@ -45,7 +45,7 @@ struct test_bv_pair_t {
 struct test_sbv_pair_t {
     ScalarBitVector bitVector;
     ScalarBitVector::value_type_t original;
-    test_sbv_pair_t(long unsigned int _original)
+    test_sbv_pair_t(unsigned long _original)
         : bitVector(_original),
           original(_original)
     {

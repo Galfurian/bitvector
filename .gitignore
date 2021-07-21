@@ -34,3 +34,7 @@
 # Clion Files/Folders
 cmake-build-*
 .idea
+
+# Other folders
+.vscode
+build
