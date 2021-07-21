@@ -195,29 +195,27 @@ public:
     template <size_type N2, size_type MIN_SIZE = MIN(N, N2)>
     inline BitVector<N> &assign(BitVector<N2> const &rhs)
     {
-        reset();
+        this->reset();
         for (size_type it = 0; it < MIN_SIZE; ++it)
             (*this)[it] = rhs[it];
         return (*this);
     }
 
     /// @brief Copies rhs into this BitVector, iterating from left to right.
-    template <size_type N2>
+    template <size_type N2, size_type MIN_SIZE = MIN(N, N2)>
     inline BitVector<N> &rassign(BitVector<N2> const &rhs)
     {
-        constexpr size_type MIN_SIZE = MIN(N, N2);
-        reset();
+        this->reset();
         for (size_type it = 0; it < MIN_SIZE; ++it)
             (*this)[N - it - 1] = rhs[N2 - it - 1];
         return (*this);
     }
 
     /// @brief Copies rhs into this BitVector.
-    template <size_type N2>
+    template <size_type N2, size_type MIN_SIZE = MIN(N, N2)>
     inline BitVector<N> &operator=(const BitVector<N2> &rhs)
     {
-        constexpr size_type MIN_SIZE = MIN(N, N2);
-        reset();
+        this->reset();
         for (size_type it = 0; it < MIN_SIZE; ++it)
             (*this)[it] = rhs[it];
         return (*this);
@@ -226,7 +224,7 @@ public:
     /// @brief Transforms rhs into a BitVector.
     inline BitVector<N> &operator=(size_type rhs)
     {
-        reset();
+        this->reset();
         for (size_type it = 0; it < N; ++it) {
             (*this)[it] = rhs % 2;
             rhs /= 2;
@@ -237,7 +235,7 @@ public:
     /// @brief Transforms rhs into a BitVector.
     inline BitVector<N> &operator=(const std::string &str)
     {
-        reset();
+        this->reset();
         for (std::string::size_type it = 0, len = str.length(); it < len; ++it)
             bits[N - 1 - it] = (str[len - 1 - it] == '1');
         return *this;
@@ -274,88 +272,29 @@ public:
     /// @brief Sums rhs to this BitVector, the size of the output BitVector
     /// is the maximum length of this and the rhs BitVectors.
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
-    inline BitVector<MAX_SIZE> &sum(BitVector<N2> const &rhs,
-                                    BitVector<MAX_SIZE> &result) const
+    inline BitVector<MAX_SIZE> &sum(BitVector<N2> const &rhs, BitVector<MAX_SIZE> &result) const
     {
         bool carry = false;
         for (size_type it = 0; it < MAX_SIZE; ++it) {
-            result[it] = add_bits((it < N) ? (*this)[it] : false,
-                                  (it < N2) ? rhs[it] : false,
-                                  carry);
+            result[it] = this->add_bits((it < N) ? (*this)[it] : false,
+                                        (it < N2) ? rhs[it] : false,
+                                        carry);
         }
         return result;
-    }
-
-    /// @brief Sums rhs to this BitVector, the size of the output BitVector
-    /// is the maximum length of this and the rhs BitVectors.
-    template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
-    inline BitVector<MAX_SIZE> operator+(BitVector<N2> const &rhs) const
-    {
-        BitVector<MAX_SIZE> result;
-        return this->sum(rhs, result);
-    }
-
-    /// @brief Sums this BitVector and rhs.
-    inline BitVector<N> operator+(size_type rhs) const
-    {
-        return (*this) + BitVector<N>(rhs);
-    }
-
-    /// @brief Sums this BitVector and rhs and assign the result to this.
-    inline BitVector<N> &operator+=(BitVector<N> const &rhs)
-    {
-        bool carry = false;
-        for (size_type it = 0; it < N; ++it)
-            (*this)[it] = add_bits((*this)[it], rhs[it], carry);
-        return (*this);
-    }
-
-    /// @brief Sums this BitVector and rhs and assign the result to this.
-    inline BitVector<N> &operator+=(size_type rhs)
-    {
-        return (*this) += BitVector<N>(rhs);
     }
 
     /// @brief Substracts rhs to this BitVector, the size of the output BitVector
     /// is the maximum length of this and the rhs BitVectors.
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
-    inline BitVector<MAX_SIZE> &sub(BitVector<N2> const &rhs,
-                                    BitVector<MAX_SIZE> &result) const
+    inline BitVector<MAX_SIZE> &sub(BitVector<N2> const &rhs, BitVector<MAX_SIZE> &result) const
     {
         bool borrow = false;
         for (size_type it = 0; it < MAX_SIZE; ++it) {
-            result[it] = sub_bits((it < N) ? (*this)[it] : false,
-                                  (it < N2) ? rhs[it] : false,
-                                  borrow);
+            result[it] = this->sub_bits((it < N) ? (*this)[it] : false,
+                                        (it < N2) ? rhs[it] : false,
+                                        borrow);
         }
         return result;
-    }
-
-    /// @brief Substracts rhs to this BitVector, the size of the output BitVector
-    /// is the maximum length of this and the rhs BitVectors.
-    template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
-    inline BitVector<MAX_SIZE> operator-(BitVector<N2> const &rhs) const
-    {
-        BitVector<MAX_SIZE> result;
-        return this->sub(rhs, result);
-    }
-
-    /// @brief Subtracts this BitVector and rhs.
-    inline BitVector<N> operator-(size_type rhs) const
-    {
-        return (*this) - BitVector<N>(rhs);
-    }
-
-    /// @brief Subtracts this BitVector and rhs and assign the result to this.
-    inline BitVector<N> &operator-=(BitVector<N> const &rhs)
-    {
-        return (*this) = (*this) - rhs;
-    }
-
-    /// @brief Subtracts this BitVector and rhs and assign the result to this.
-    inline BitVector<N> &operator-=(size_type rhs)
-    {
-        return (*this) = (*this) - rhs;
     }
 
     /// @brief Multiplies rhs to this BitVector, the size of the output
@@ -384,22 +323,6 @@ public:
                     result += this->shift_left(it, support);
         }
         return result;
-    }
-
-    /// @brief Multiplies rhs to this BitVector, the size of the output
-    /// BitVector is the maximum length of this and the rhs BitVectors
-    /// multiplied by 2.
-    template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
-    inline BitVector<MAX_SIZE * 2> operator*(BitVector<N2> const &rhs) const
-    {
-        BitVector<MAX_SIZE * 2> result, support;
-        return mul(rhs, result, support);
-    }
-
-    /// @brief Multiplies this BitVector and rhs.
-    inline BitVector<N * 2> operator*(size_type rhs) const
-    {
-        return (*this) * BitVector<N>(rhs);
     }
 
     /// @brief Divides this BitVector for rhs, the size of the output BitVector
@@ -448,6 +371,92 @@ public:
         return qotient;
     }
 
+    /// @brief Left-shifts this BitVector by the given number of bits. It uses
+    ///         the `support` bitvector to store the result.
+    template <size_type N2>
+    inline BitVector<N2> &shift_right(size_type shift, BitVector<N2> &support) const
+    {
+        return ((support = (*this)) >>= shift);
+    }
+
+    /// @brief Left-shifts this BitVector by the given number of bits. It uses
+    //    ///         the `support` bitvector to store the result.
+    template <size_type N2>
+    inline BitVector<N2> &shift_left(size_type shift, BitVector<N2> &support) const
+    {
+        return ((support = (*this)) <<= shift);
+    }
+
+    /// @brief Sums rhs to this BitVector, the size of the output BitVector
+    /// is the maximum length of this and the rhs BitVectors.
+    template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
+    inline BitVector<MAX_SIZE> operator+(BitVector<N2> const &rhs) const
+    {
+        BitVector<MAX_SIZE> result;
+        return this->sum<N2, MAX_SIZE>(rhs, result);
+    }
+
+    /// @brief Sums this BitVector and rhs.
+    inline BitVector<N> operator+(size_type rhs) const
+    {
+        return (*this) + BitVector<N>(rhs);
+    }
+
+    /// @brief Sums this BitVector and rhs and assign the result to this.
+    inline BitVector<N> &operator+=(BitVector<N> const &rhs)
+    {
+        return this->sum(rhs, *this);
+    }
+
+    /// @brief Sums this BitVector and rhs and assign the result to this.
+    inline BitVector<N> &operator+=(size_type rhs)
+    {
+        return (*this) += BitVector<N>(rhs);
+    }
+
+    /// @brief Substracts rhs to this BitVector, the size of the output BitVector
+    /// is the maximum length of this and the rhs BitVectors.
+    template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
+    inline BitVector<MAX_SIZE> operator-(BitVector<N2> const &rhs) const
+    {
+        BitVector<MAX_SIZE> result;
+        return this->sub<N2, MAX_SIZE>(rhs, result);
+    }
+
+    /// @brief Subtracts this BitVector and rhs.
+    inline BitVector<N> operator-(size_type rhs) const
+    {
+        return (*this) - BitVector<N>(rhs);
+    }
+
+    /// @brief Subtracts this BitVector and rhs and assign the result to this.
+    inline BitVector<N> &operator-=(BitVector<N> const &rhs)
+    {
+        return this->sub(rhs, *this);
+    }
+
+    /// @brief Subtracts this BitVector and rhs and assign the result to this.
+    inline BitVector<N> &operator-=(size_type rhs)
+    {
+        return (*this) = (*this) - rhs;
+    }
+
+    /// @brief Multiplies rhs to this BitVector, the size of the output
+    /// BitVector is the maximum length of this and the rhs BitVectors
+    /// multiplied by 2.
+    template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
+    inline BitVector<MAX_SIZE * 2> operator*(BitVector<N2> const &rhs) const
+    {
+        BitVector<MAX_SIZE * 2> result, support;
+        return this->mul(rhs, result, support);
+    }
+
+    /// @brief Multiplies this BitVector and rhs.
+    inline BitVector<N * 2> operator*(size_type rhs) const
+    {
+        return (*this) * BitVector<N>(rhs);
+    }
+
     /// @brief Divides this BitVector for rhs, the size of the output BitVector
     /// is the maximum length of this and the rhs BitVectors.
     /// @details Original version available in:
@@ -456,38 +465,8 @@ public:
     template <size_type N2, size_type MAX_SIZE = MAX(N, N2)>
     inline BitVector<MAX_SIZE> operator/(BitVector<N2> rhs) const
     {
-        BitVector<MAX_SIZE> qotient;
-        if (rhs.none())
-            throw std::domain_error("division by zero undefined");
-        if (this->none())
-            return qotient;
-        if ((*this) == rhs) {
-            qotient[0] = true;
-            return qotient;
-        }
-        if ((*this) < rhs)
-            return qotient;
-        BitVector<MAX_SIZE> remainder(*this), x(*this), y(rhs);
-        // Count significant digits in y and dividend.
-        size_type sig_x = most_significant_bit(x);
-        size_type sig_y = most_significant_bit(y);
-        // Align the y with the dividend.
-        size_type n = (sig_x - sig_y);
-        y <<= n;
-        // Make sure the loop executes the right number of times.
-        n += 1;
-        // Long division algorithm, shift, and subtract.
-        while (n--) {
-            // Shift the quotient to the left.
-            if (y <= remainder) {
-                // Add a new digit to quotient.
-                qotient[n] = true;
-                remainder -= y;
-            }
-            // Shift the y to the right.
-            y >>= 1;
-        }
-        return qotient;
+        BitVector<MAX_SIZE> qotient, remainder, support;
+        return this->div(rhs, qotient, remainder, support);
     }
 
     /// @brief Divides this BitVector for rhs.
@@ -509,20 +488,12 @@ public:
     inline BitVector<N> &operator>>=(size_type shift)
     {
         if (shift > 0) {
-            for (size_type it = shift; it < N; ++it)
+            for (size_type it = N - 1; it >= shift; --it)
                 bits[it] = bits[it - shift];
             for (size_type it = 0; it < shift; ++it)
                 bits[it] = false;
         }
         return (*this);
-    }
-
-    /// @brief Left-shifts this BitVector by the given number of bits. It uses
-    ///         the `support` bitvector to store the result.
-    template <size_type N2>
-    inline BitVector<N2> &shift_right(size_type shift, BitVector<N2> &support) const
-    {
-        return ((support = (*this)) >>= shift);
     }
 
     /// @brief Left-shifts this BitVector by the given number of bits.
@@ -544,14 +515,6 @@ public:
                 bits[it] = false;
         }
         return (*this);
-    }
-
-    /// @brief Left-shifts this BitVector by the given number of bits. It uses
-    //    ///         the `support` bitvector to store the result.
-    template <size_type N2>
-    inline BitVector<N2> &shift_left(size_type shift, BitVector<N2> &support) const
-    {
-        return ((support = (*this)) <<= shift);
     }
 
     /// @brief Checks the equality between rhs and this.

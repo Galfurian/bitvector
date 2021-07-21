@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 3.1...3.18)
 
 # Set the project name.
-project(bit_vector)
+project(bvlib)
 
 # Set the default build type to Debug.
 if(NOT CMAKE_BUILD_TYPE)
@@ -33,7 +33,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Set the actual flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -45,22 +45,19 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 # -----------------------------------------------------------------------------
-# Add the C++ Executable.
+# Add the C++ Library.
 # -----------------------------------------------------------------------------
-add_executable(
-    ${PROJECT_NAME}
-    ./src/main.cpp
+add_library(
+    ${PROJECT_NAME} INTERFACE
 )
 
 # -----------------------------------------------------------------------------
 # Inlcude header directories and set the library.
 # -----------------------------------------------------------------------------
-include_directories(
+target_include_directories(
+    ${PROJECT_NAME} INTERFACE
     # Include project directories.
     ${PROJECT_SOURCE_DIR}/include/
-    ${PROJECT_SOURCE_DIR}/submodules/
-    # Inlcude directories coming from external libraries.
-    # e.g., ${***_INCLUDE_DIRS}
 )
 
 # -----------------------------------------------------------------------------
@@ -74,6 +71,6 @@ include_directories(
 # Add tests.
 # -----------------------------------------------------------------------------
 # CMake has support for adding tests to a project:
-#enable_testing()
+enable_testing()
 # Add the subdirectory containing the tests (which imports also their target).
-#add_subdirectory(test)
+add_subdirectory(test)
