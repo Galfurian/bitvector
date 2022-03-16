@@ -1,8 +1,12 @@
 
-#include "bitvector.hpp"
+#include "bvlib/bitvector.hpp"
+#include "bvlib/math.hpp"
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
+
+using namespace bvlib;
 
 #define TEST_BINARY_OP(op)                                                      \
     std::cout << "== Testing " #op " " << std::string(25, '=') << "\n";         \

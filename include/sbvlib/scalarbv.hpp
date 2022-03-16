@@ -11,6 +11,9 @@
 #include <cassert>
 #include <iostream>
 
+namespace bvlib
+{
+
 #define bit_set(V, B)          ((V) | (1ULL << (B)))   ///< Sets the given bit.
 #define bit_clear(V, B)        ((V) & ~(1ULL << (B)))  ///< Clears the given bit.
 #define bit_flip(V, B)         ((V) ^ (1ULL << (B)))   ///< Flips the given bit.
@@ -239,3 +242,5 @@ inline std::ostream &operator<<(std::ostream &lhs, ScalarBitVector const &rhs)
     lhs << rhs.to_number();
     return lhs;
 }
+
+} // namespace bvlib

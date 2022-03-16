@@ -11,12 +11,12 @@
 cmake_minimum_required(VERSION 3.1...3.18)
 
 # Set the project name.
-project(bvlib)
+project(bvlib CXX)
 
 # Set the default build type to Debug.
 if(NOT CMAKE_BUILD_TYPE)
-  message(STATUS "Setting build type to 'Debug' as none was specified.")
-  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+    message(STATUS "Setting build type to 'Debug' as none was specified.")
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -32,9 +32,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Set the actual flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3")
@@ -44,28 +45,18 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
+# Enable standards-conformance mode for MSVC compilers that support this flag
+# (Visual C++ 2017 and later).
+if(MSVC)
+    add_compile_options(/permissive-)
+endif()
+
 # -----------------------------------------------------------------------------
 # Add the C++ Library.
 # -----------------------------------------------------------------------------
-add_library(
-    ${PROJECT_NAME} INTERFACE
-)
-
-# -----------------------------------------------------------------------------
+add_library(${PROJECT_NAME} INTERFACE)
 # Inlcude header directories and set the library.
-# -----------------------------------------------------------------------------
-target_include_directories(
-    ${PROJECT_NAME} INTERFACE
-    # Include project directories.
-    ${PROJECT_SOURCE_DIR}/include/
-)
-
-# -----------------------------------------------------------------------------
-# Add linked libraries (if required).
-# -----------------------------------------------------------------------------
-#target_link_libraries(
-#    ${PROJECT_NAME}
-#)
+target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/include/)
 
 # -----------------------------------------------------------------------------
 # Add tests.
@@ -73,4 +64,4 @@ target_include_directories(
 # CMake has support for adding tests to a project:
 enable_testing()
 # Add the subdirectory containing the tests (which imports also their target).
-add_subdirectory(test)
+add_subdirectory(test EXCLUDE_FROM_ALL)
