@@ -591,11 +591,11 @@ inline constexpr auto mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> 
     bvlib::BitVector<output_size> result;
     // Perform the multiplication.
     if (lhs.count() < rhs.count()) {
-        for (; it < max_size; ++it)
+        for (; it < N1; ++it)
             if (lhs[it])
                 result += bvlib::shift_left(rhs, it);
     } else {
-        for (; it < max_size; ++it)
+        for (; it < N2; ++it)
             if (rhs[it])
                 result += bvlib::shift_left(lhs, it);
     }
