@@ -150,6 +150,11 @@ int test_operators()
 
 int main(int argc, char *argv[])
 {
+    bvlib::BitVector<8> a(8);
+    std::cout << a.to_string() << "\n";
+    a = bvlib::shift_left(a, 9);
+    std::cout << a.to_string() << "\n";
+
     if (test_operators<8, 4, 256>())
         return 1;
     if (test_operators<16, 8, 256>())

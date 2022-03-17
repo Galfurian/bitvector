@@ -37,7 +37,7 @@ namespace bvlib
 /// @param b2 second bit.
 /// @param carry the carry from the operation.
 /// @return the sum of the two bits.
-inline constexpr bool add_bits(bool b1, bool b2, bool &carry)
+inline constexpr auto add_bits(bool b1, bool b2, bool &carry)
 {
     bool sum = (b1 ^ b2) ^ carry;
     carry    = (b1 && b2) || (b1 && carry) || (b2 && carry);
@@ -49,7 +49,7 @@ inline constexpr bool add_bits(bool b1, bool b2, bool &carry)
 /// @param b2 second bit.
 /// @param borrow the borrow from the operation.
 /// @return the difference between the two bits.
-inline constexpr bool sub_bits(bool b1, bool b2, bool &borrow)
+inline constexpr auto sub_bits(bool b1, bool b2, bool &borrow)
 {
     bool difference = borrow ? !(b1 ^ b2) : b1 ^ b2;
     borrow          = borrow ? !b1 || b2 : !b1 && b2;
@@ -60,12 +60,12 @@ inline constexpr bool sub_bits(bool b1, bool b2, bool &borrow)
 /// @param bitvector the input bitvector.
 /// @return position of the most significant bit.
 template <bvlib::size_type_t N>
-inline constexpr bvlib::size_type_t most_significant_bit(const bvlib::BitVector<N> &bitvector)
+inline constexpr auto most_significant_bit(const bvlib::BitVector<N> &bitvector)
 {
-    for (long i = N - 1; i >= 0; i--)
+    for (bvlib::size_type_t i = N - 1; i >= 0; i--)
         if (bitvector[i])
             return i;
-    return 0;
+    return bvlib::size_type_t(0);
 }
 
 // ============================================================================
@@ -80,6 +80,7 @@ template <bvlib::size_type_t N>
 inline constexpr auto shift_left(bvlib::BitVector<N> bitvector, bvlib::size_type_t shift)
 {
     bvlib::size_type_t it = 0;
+    shift = std::min(N, shift);
     if (shift > 0) {
         for (; it < (N - shift); ++it)
             bitvector.bits[it] = bitvector.bits[it + shift];
@@ -471,7 +472,7 @@ inline constexpr auto operator+(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param rhs the bitvector.
 /// @return the sum between the two values.
 template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline BitVector<N> operator+(T lhs, BitVector<N> const &rhs)
+inline constexpr auto operator+(T lhs, BitVector<N> const &rhs)
 {
     return bvlib::sum<N, N>(bvlib::BitVector<N>(lhs), rhs);
 }
@@ -545,7 +546,7 @@ inline constexpr auto operator-(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param rhs the bitvector.
 /// @return the difference between the two values.
 template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline bvlib::BitVector<N> operator-(T lhs, bvlib::BitVector<N> const &rhs)
+inline constexpr auto operator-(T lhs, bvlib::BitVector<N> const &rhs)
 {
     return bvlib::sub<N, N>(bvlib::BitVector<N>(lhs), rhs);
 }
