@@ -2,7 +2,9 @@
 #include <iomanip>
 #include <vector>
 
-#include "scalarbv.hpp"
+#include "sbvlib/scalarbv.hpp"
+
+using namespace sbvlib;
 
 #define TEST_BINARY_OP(op)                                                      \
     std::cout << "== Testing " #op " " << std::string(25, '=') << "\n";         \

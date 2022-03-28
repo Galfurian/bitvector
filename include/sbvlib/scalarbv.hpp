@@ -11,7 +11,7 @@
 #include <cassert>
 #include <iostream>
 
-namespace bvlib
+namespace sbvlib
 {
 
 #define bit_set(V, B)          ((V) | (1ULL << (B)))   ///< Sets the given bit.
@@ -243,4 +243,4 @@ inline std::ostream &operator<<(std::ostream &lhs, ScalarBitVector const &rhs)
     return lhs;
 }
 
-} // namespace bvlib
+} // namespace sbvlib
