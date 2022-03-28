@@ -80,7 +80,7 @@ template <bvlib::size_type_t N>
 inline constexpr auto shift_left(bvlib::BitVector<N> bitvector, bvlib::size_type_t shift)
 {
     bvlib::size_type_t it = 0;
-    shift = std::min(N, shift);
+    shift                 = std::min(N, shift);
     if (shift > 0) {
         for (; it < (N - shift); ++it)
             bitvector.bits[it] = bitvector.bits[it + shift];
@@ -592,13 +592,15 @@ inline constexpr auto mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> 
     bvlib::BitVector<output_size> result;
     // Perform the multiplication.
     if (lhs.count() < rhs.count()) {
+        bvlib::BitVector<output_size> _rhs(rhs);
         for (; it < N1; ++it)
             if (lhs[it])
-                result += bvlib::shift_left(rhs, it);
+                result += bvlib::shift_left(_rhs, it);
     } else {
+        bvlib::BitVector<output_size> _lhs(lhs);
         for (; it < N2; ++it)
             if (rhs[it])
-                result += bvlib::shift_left(lhs, it);
+                result += bvlib::shift_left(_lhs, it);
     }
     return result;
 }
