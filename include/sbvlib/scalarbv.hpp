@@ -68,7 +68,7 @@ public:
     }
 
     /// @brief Flips every bit.
-    inline auto &flip()
+    inline ScalarBitVector &flip()
     {
         value = ~value;
         return (*this);

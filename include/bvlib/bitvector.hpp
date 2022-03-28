@@ -46,7 +46,7 @@ public:
             bits[it] = false;
     }
 
-    template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+    template <typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
     explicit BitVector(T value)
         : bits()
     {
@@ -74,7 +74,7 @@ public:
     explicit BitVector(BitVector<N2> const &other)
         : bits()
     {
-        constexpr bvlib::size_type_t min_size = std::min(N, N2);
+        bvlib::size_type_t min_size = std::min(N, N2);
         for (bvlib::size_type_t it = 0; it < min_size; ++it)
             this->at(it) = other[it];
     }
@@ -82,19 +82,19 @@ public:
     virtual ~BitVector() = default;
 
     /// @brief Returns a bitvector of all ones.
-    static constexpr inline auto ones()
+    static inline BitVector<N> ones()
     {
         return BitVector<N>().flip();
     }
 
     /// @brief Returns a bitvector of all zeros.
-    static constexpr inline auto zeros()
+    static inline BitVector<N> zeros()
     {
         return BitVector<N>();
     }
 
     /// @brief Sets every bit to false.
-    constexpr inline auto &reset()
+    inline BitVector<N> &reset()
     {
         for (bvlib::size_type_t it = 0; it < N; ++it)
             bits[it] = false;
@@ -102,14 +102,14 @@ public:
     }
 
     /// @brief Sets the given bit to false.
-    constexpr inline auto &reset(bvlib::size_type_t position)
+    inline BitVector<N> &reset(bvlib::size_type_t position)
     {
         this->at(position) = false;
         return (*this);
     }
 
     /// @brief Flips every bit.
-    constexpr inline auto &flip()
+    inline BitVector<N> &flip()
     {
         for (bvlib::size_type_t it = 0; it < N; ++it)
             bits[it] = !bits[it];
@@ -117,20 +117,20 @@ public:
     }
 
     /// @brief Flips a given bit.
-    constexpr inline auto &flip(bvlib::size_type_t position)
+    inline BitVector<N> &flip(bvlib::size_type_t position)
     {
         this->at(position) = !this->at(position);
         return (*this);
     }
 
     /// @brief Returns the size of the bit-vector.
-    inline bvlib::size_type_t size() const
+    inline auto size() const -> bvlib::size_type_t
     {
         return N;
     }
 
     /// @brief Returns the number of bits which are set.
-    inline bvlib::size_type_t count() const
+    inline auto count() const -> bvlib::size_type_t
     {
         bvlib::size_type_t result = 0;
         for (bvlib::size_type_t it = 0; it < N; ++it)
@@ -139,7 +139,7 @@ public:
     }
 
     /// @brief Tests whether all the bits are on.
-    inline auto all() const
+    inline auto all() const -> bool
     {
         for (bvlib::size_type_t it = 0; it < N; ++it)
             if (!bits[it])
@@ -148,7 +148,7 @@ public:
     }
 
     /// @brief Tests whether any of the bits are on.
-    inline auto any() const
+    inline auto any() const -> bool
     {
         for (bvlib::size_type_t it = 0; it < N; ++it)
             if (bits[it])
@@ -157,7 +157,7 @@ public:
     }
 
     /// @brief Tests whether none of the bits are on.
-    inline auto none() const
+    inline auto none() const -> bool
     {
         for (bvlib::size_type_t it = 0; it < N; ++it)
             if (bits[it])
@@ -166,19 +166,19 @@ public:
     }
 
     /// @brief Tests whether the sign bit is on.
-    inline auto sign() const
+    inline auto sign() const -> bool
     {
         return bits[0];
     }
 
     /// @brief Performs two-complement.
-    constexpr inline auto &two_complement()
+    inline BitVector<N> &two_complement()
     {
-        return flip() += 1;
+        return this->flip() += 1;
     }
 
     /// @brief Swaps the bits from 'start' to 'end'.
-    constexpr inline auto &swap(bvlib::size_type_t start = 0, bvlib::size_type_t end = N - 1)
+    inline BitVector<N> &swap(bvlib::size_type_t start = 0, bvlib::size_type_t end = N - 1)
     {
         do std::swap(bits[start], bits[end]);
         while (start++ < end--);
@@ -187,9 +187,9 @@ public:
 
     /// @brief Copies rhs into this BitVector.
     template <bvlib::size_type_t N2>
-    constexpr inline auto &assign(BitVector<N2> const &rhs)
+    inline BitVector<N> &assign(BitVector<N2> const &rhs)
     {
-        constexpr bvlib::size_type_t min_size = std::min(N, N2);
+        bvlib::size_type_t min_size = std::min(N, N2);
         this->reset();
         for (bvlib::size_type_t it = 0; it < min_size; ++it)
             this->at(it) = rhs[it];
@@ -198,9 +198,9 @@ public:
 
     /// @brief Copies rhs into this BitVector, iterating from left to right.
     template <bvlib::size_type_t N2>
-    constexpr inline auto &rassign(BitVector<N2> const &rhs)
+    inline BitVector<N> &rassign(BitVector<N2> const &rhs)
     {
-        constexpr bvlib::size_type_t min_size = std::min(N, N2);
+        bvlib::size_type_t min_size = std::min(N, N2);
         this->reset();
         for (bvlib::size_type_t it = 0; it < min_size; ++it)
             this->at(N - it - 1) = rhs[N2 - it - 1];
@@ -209,9 +209,9 @@ public:
 
     /// @brief Copies rhs into this BitVector.
     template <bvlib::size_type_t N2>
-    constexpr inline auto &operator=(const BitVector<N2> &rhs)
+    inline BitVector<N> &operator=(const BitVector<N2> &rhs)
     {
-        constexpr bvlib::size_type_t min_size = std::min(N, N2);
+        bvlib::size_type_t min_size = std::min(N, N2);
         this->reset();
         for (bvlib::size_type_t it = 0; it < min_size; ++it)
             this->at(it) = rhs[it];
@@ -219,7 +219,7 @@ public:
     }
 
     /// @brief Transforms rhs into a BitVector.
-    constexpr inline auto &operator=(bvlib::size_type_t rhs)
+    inline BitVector<N> &operator=(bvlib::size_type_t rhs)
     {
         this->reset();
         for (bvlib::size_type_t it = 0; it < N; ++it) {
@@ -230,7 +230,7 @@ public:
     }
 
     /// @brief Transforms rhs into a BitVector.
-    constexpr inline auto &operator=(const std::string &str)
+    inline BitVector<N> &operator=(const std::string &str)
     {
         this->reset();
         for (std::string::size_type it = 0, len = str.length(); it < len; ++it)
@@ -239,7 +239,7 @@ public:
     }
 
     /// @brief Returns a reference to the bit at the given position.
-    constexpr inline auto &at(bvlib::size_type_t position)
+    inline bool &at(bvlib::size_type_t position)
     {
         if (position >= N)
             throw std::out_of_range("accessing values outside bitvector");
@@ -247,7 +247,7 @@ public:
     }
 
     /// @brief Returns the bit at the given position.
-    constexpr inline auto at(bvlib::size_type_t position) const
+    inline const bool &at(bvlib::size_type_t position) const
     {
         if (position >= N)
             throw std::out_of_range("accessing values outside bitvector");
@@ -255,7 +255,7 @@ public:
     }
 
     /// @brief Returns a reference to the bit at the given position.
-    constexpr inline auto &operator[](bvlib::size_type_t position)
+    inline bool &operator[](bvlib::size_type_t position)
     {
         if (position >= N)
             throw std::out_of_range("accessing values outside bitvector");
@@ -263,7 +263,7 @@ public:
     }
 
     /// @brief Returns the bit at the given position.
-    constexpr inline auto operator[](bvlib::size_type_t position) const
+    inline const bool &operator[](bvlib::size_type_t position) const
     {
         if (position >= N)
             throw std::out_of_range("accessing values outside bitvector");
@@ -271,7 +271,7 @@ public:
     }
 
     /// @brief Transforms this BitVector to string.
-    inline auto to_string() const
+    inline std::string to_string() const
     {
         std::string str;
         for (bvlib::size_type_t it = 0; it < N; ++it)
@@ -280,10 +280,10 @@ public:
     }
 
     /// @brief Transforms this BitVector to number.
-    template <typename DataType = long>
-    inline auto to_number() const
+    template <typename T = long>
+    inline T to_number() const
     {
-        DataType result = 0;
+        T result = 0;
         for (long it = N - 1; it >= 0; --it)
             if (bits[it])
                 result += std::pow(2, N - it - 1);

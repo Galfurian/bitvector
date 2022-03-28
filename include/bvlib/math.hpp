@@ -27,6 +27,7 @@
 
 namespace bvlib
 {
+#define MAX(V1, V2) ((V1) > (V2) ? (V1) : (V2))
 
 // ============================================================================
 // SUPPOR FUNCTIONS
@@ -37,7 +38,7 @@ namespace bvlib
 /// @param b2 second bit.
 /// @param carry the carry from the operation.
 /// @return the sum of the two bits.
-inline constexpr auto add_bits(bool b1, bool b2, bool &carry)
+inline bool add_bits(bool b1, bool b2, bool &carry)
 {
     bool sum = (b1 ^ b2) ^ carry;
     carry    = (b1 && b2) || (b1 && carry) || (b2 && carry);
@@ -49,7 +50,7 @@ inline constexpr auto add_bits(bool b1, bool b2, bool &carry)
 /// @param b2 second bit.
 /// @param borrow the borrow from the operation.
 /// @return the difference between the two bits.
-inline constexpr auto sub_bits(bool b1, bool b2, bool &borrow)
+inline bool sub_bits(bool b1, bool b2, bool &borrow)
 {
     bool difference = borrow ? !(b1 ^ b2) : b1 ^ b2;
     borrow          = borrow ? !b1 || b2 : !b1 && b2;
@@ -60,7 +61,7 @@ inline constexpr auto sub_bits(bool b1, bool b2, bool &borrow)
 /// @param bitvector the input bitvector.
 /// @return position of the most significant bit.
 template <bvlib::size_type_t N>
-inline constexpr auto most_significant_bit(const bvlib::BitVector<N> &bitvector)
+inline bvlib::size_type_t most_significant_bit(const bvlib::BitVector<N> &bitvector)
 {
     for (bvlib::size_type_t i = N - 1; i >= 0; i--)
         if (bitvector[i])
@@ -77,7 +78,7 @@ inline constexpr auto most_significant_bit(const bvlib::BitVector<N> &bitvector)
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
 template <bvlib::size_type_t N>
-inline constexpr auto shift_left(bvlib::BitVector<N> bitvector, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> shift_left(bvlib::BitVector<N> bitvector, bvlib::size_type_t shift)
 {
     bvlib::size_type_t it = 0;
     shift                 = std::min(N, shift);
@@ -95,7 +96,7 @@ inline constexpr auto shift_left(bvlib::BitVector<N> bitvector, bvlib::size_type
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
 template <bvlib::size_type_t N>
-inline constexpr auto shift_right(bvlib::BitVector<N> bitvector, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> shift_right(bvlib::BitVector<N> bitvector, bvlib::size_type_t shift)
 {
     bvlib::size_type_t it;
     if (shift > 0) {
@@ -116,7 +117,7 @@ inline constexpr auto shift_right(bvlib::BitVector<N> bitvector, bvlib::size_typ
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
 template <bvlib::size_type_t N>
-inline constexpr auto &operator<<(const bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> operator<<(const bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
 {
     return bvlib::shift_left(lhs, shift);
 }
@@ -130,7 +131,7 @@ inline constexpr auto &operator<<(const bvlib::BitVector<N> &lhs, bvlib::size_ty
 /// @param shift the amount to shift.
 /// @return the input bitvector, shifted.
 template <bvlib::size_type_t N>
-inline constexpr auto &operator<<=(bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> &operator<<=(bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
 {
     bvlib::size_type_t it = 0;
     if (shift > 0) {
@@ -151,7 +152,7 @@ inline constexpr auto &operator<<=(bvlib::BitVector<N> &lhs, bvlib::size_type_t 
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
 template <bvlib::size_type_t N>
-inline constexpr auto &operator>>(const bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> operator>>(const bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
 {
     return bvlib::shift_right(lhs, shift);
 }
@@ -165,7 +166,7 @@ inline constexpr auto &operator>>(const bvlib::BitVector<N> &lhs, bvlib::size_ty
 /// @param shift the amount to shift.
 /// @return the input bitvector, shifted.
 template <bvlib::size_type_t N>
-inline constexpr auto &operator>>=(bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> &operator>>=(bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
 {
     bvlib::size_type_t it = 0;
     if (shift > 0) {
@@ -186,10 +187,9 @@ inline constexpr auto &operator>>=(bvlib::BitVector<N> &lhs, bvlib::size_type_t 
 /// @param rhs the second bitvector.
 /// @return if they are equal.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator==(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bool operator==(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    for (bvlib::size_type_t it = max_size; it > 0; --it) {
+    for (bvlib::size_type_t it = MAX(N1, N2); it > 0; --it) {
         if ((((it - 1) < N1) ? lhs[it - 1] : false) != (((it - 1) < N2) ? rhs[it - 1] : false))
             return false;
     }
@@ -200,8 +200,8 @@ inline constexpr auto operator==(const bvlib::BitVector<N1> &lhs, const bvlib::B
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if they are equal.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator==(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator==(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs == bvlib::BitVector<N>(rhs);
 }
@@ -210,8 +210,8 @@ inline constexpr auto operator==(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if they are equal.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator==(T lhs, const bvlib::BitVector<N> &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator==(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) == rhs;
 }
@@ -225,10 +225,9 @@ inline constexpr auto operator==(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param rhs the second bitvector.
 /// @return if they are equal.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator!=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bool operator!=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    for (bvlib::size_type_t it = max_size; it > 0; --it) {
+    for (bvlib::size_type_t it = MAX(N1, N2); it > 0; --it) {
         if ((((it - 1) < N1) ? lhs[it - 1] : false) != (((it - 1) < N2) ? rhs[it - 1] : false))
             return true;
     }
@@ -239,8 +238,8 @@ inline constexpr auto operator!=(const bvlib::BitVector<N1> &lhs, const bvlib::B
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if they are equal.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator!=(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator!=(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs != bvlib::BitVector<N>(rhs);
 }
@@ -249,8 +248,8 @@ inline constexpr auto operator!=(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if they are equal.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator!=(T lhs, const bvlib::BitVector<N> &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator!=(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) != rhs;
 }
@@ -264,10 +263,9 @@ inline constexpr auto operator!=(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param rhs the second bitvector.
 /// @return if first value is smaller than the second value.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator<(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bool operator<(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    for (bvlib::size_type_t it = max_size; it > 0; --it) {
+    for (bvlib::size_type_t it = MAX(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (a && !b)
@@ -282,8 +280,8 @@ inline constexpr auto operator<(const bvlib::BitVector<N1> &lhs, const bvlib::Bi
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if first value is smaller than the second value.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator<(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator<(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs < bvlib::BitVector<N>(rhs);
 }
@@ -292,8 +290,8 @@ inline constexpr auto operator<(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if first value is smaller than the second value.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator<(T lhs, const bvlib::BitVector<N> &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator<(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) < rhs;
 }
@@ -307,10 +305,9 @@ inline constexpr auto operator<(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param rhs the second bitvector.
 /// @return if first value is smaller than or equal to the second value.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator<=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bool operator<=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    for (size_type_t it = max_size; it > 0; --it) {
+    for (size_type_t it = MAX(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (a && !b)
@@ -325,8 +322,8 @@ inline constexpr auto operator<=(const bvlib::BitVector<N1> &lhs, const bvlib::B
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if first value is smaller than or equal to the second value.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator<=(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator<=(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs <= bvlib::BitVector<N>(rhs);
 }
@@ -335,8 +332,8 @@ inline constexpr auto operator<=(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if first value is smaller than or equal to the second value.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator<=(T lhs, const bvlib::BitVector<N> &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator<=(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) <= rhs;
 }
@@ -350,10 +347,9 @@ inline constexpr auto operator<=(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param rhs the second bitvector.
 /// @return if first value is greather than the second value.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator>(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bool operator>(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    for (size_type_t it = max_size; it > 0; --it) {
+    for (size_type_t it = MAX(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (!a && b)
@@ -368,8 +364,8 @@ inline constexpr auto operator>(const bvlib::BitVector<N1> &lhs, const bvlib::Bi
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if first value is greather than the second value.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator>(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator>(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs > bvlib::BitVector<N>(rhs);
 }
@@ -378,8 +374,8 @@ inline constexpr auto operator>(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if first value is greather than the second value.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator>(T lhs, const bvlib::BitVector<N> &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator>(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) > rhs;
 }
@@ -393,10 +389,9 @@ inline constexpr auto operator>(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param rhs the second bitvector.
 /// @return if first value is greather than or equal to the second value.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator>=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bool operator>=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    for (size_type_t it = max_size; it > 0; --it) {
+    for (size_type_t it = MAX(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (!a && b)
@@ -411,8 +406,8 @@ inline constexpr auto operator>=(const bvlib::BitVector<N1> &lhs, const bvlib::B
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if first value is greather than or equal to the second value.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator>=(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator>=(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs >= bvlib::BitVector<N>(rhs);
 }
@@ -421,8 +416,8 @@ inline constexpr auto operator>=(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if first value is greather than or equal to the second value.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator>=(T lhs, const bvlib::BitVector<N> &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bool operator>=(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) >= rhs;
 }
@@ -436,12 +431,11 @@ inline constexpr auto operator>=(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param rhs the second bitvector.
 /// @return the sum between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto sum(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<MAX(N1, N2)> sum(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    bvlib::BitVector<max_size> result;
+    bvlib::BitVector<MAX(N1, N2)> result;
     bool carry = false;
-    for (size_type_t it = 0; it < max_size; ++it) {
+    for (size_type_t it = 0; it < MAX(N1, N2); ++it) {
         result[it] = bvlib::add_bits((it < N1) ? lhs[it] : false, (it < N2) ? rhs[it] : false, carry);
     }
     return result;
@@ -452,7 +446,7 @@ inline constexpr auto sum(const bvlib::BitVector<N1> &lhs, const bvlib::BitVecto
 /// @param rhs the second bitvector.
 /// @return the sum between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator+(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<MAX(N1, N2)> operator+(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::sum<N1, N2>(lhs, rhs);
 }
@@ -461,8 +455,8 @@ inline constexpr auto operator+(const bvlib::BitVector<N1> &lhs, const bvlib::Bi
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return the sum between the two values.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator+(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bvlib::BitVector<N> operator+(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return bvlib::sum<N, N>(lhs, BitVector<N>(rhs));
 }
@@ -471,8 +465,8 @@ inline constexpr auto operator+(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return the sum between the two values.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator+(T lhs, BitVector<N> const &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bvlib::BitVector<N> operator+(T lhs, BitVector<N> const &rhs)
 {
     return bvlib::sum<N, N>(bvlib::BitVector<N>(lhs), rhs);
 }
@@ -482,9 +476,9 @@ inline constexpr auto operator+(T lhs, BitVector<N> const &rhs)
 /// @param rhs the second bitvector.
 /// @return the sum between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto &operator+=(bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<N1> &operator+=(bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    static_assert(N1 >= N2);
+    static_assert(N1 >= N2, "RHS has more bits than LHS");
     bool carry = false;
     for (size_type_t it = 0; it < N1; ++it) {
         lhs[it] = add_bits(lhs[it], (it < N2) ? rhs[it] : false, carry);
@@ -497,7 +491,7 @@ inline constexpr auto &operator+=(bvlib::BitVector<N1> &lhs, const bvlib::BitVec
 /// @param rhs the integer value.
 /// @return the sum between the two values.
 template <bvlib::size_type_t N>
-inline constexpr auto &operator+=(bvlib::BitVector<N> &lhs, bvlib::size_type_t rhs)
+inline bvlib::BitVector<N> &operator+=(bvlib::BitVector<N> &lhs, bvlib::size_type_t rhs)
 {
     return (lhs += BitVector<N>(rhs));
 }
@@ -511,12 +505,11 @@ inline constexpr auto &operator+=(bvlib::BitVector<N> &lhs, bvlib::size_type_t r
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto sub(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<MAX(N1, N2)> sub(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    bvlib::BitVector<max_size> result;
+    bvlib::BitVector<MAX(N1, N2)> result;
     bool borrow = false;
-    for (size_type_t it = 0; it < max_size; ++it)
+    for (size_type_t it = 0; it < MAX(N1, N2); ++it)
         result[it] = bvlib::sub_bits((it < N1) ? lhs[it] : false, (it < N2) ? rhs[it] : false, borrow);
     return result;
 }
@@ -526,7 +519,7 @@ inline constexpr auto sub(const bvlib::BitVector<N1> &lhs, const bvlib::BitVecto
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator-(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<MAX(N1, N2)> operator-(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::sub<N1, N2>(lhs, rhs);
 }
@@ -535,8 +528,8 @@ inline constexpr auto operator-(const bvlib::BitVector<N1> &lhs, const bvlib::Bi
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return the difference between the two values.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator-(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bvlib::BitVector<N> operator-(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return bvlib::sub<N, N>(lhs, bvlib::BitVector<N>(rhs));
 }
@@ -545,8 +538,8 @@ inline constexpr auto operator-(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return the difference between the two values.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator-(T lhs, bvlib::BitVector<N> const &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bvlib::BitVector<N> operator-(T lhs, bvlib::BitVector<N> const &rhs)
 {
     return bvlib::sub<N, N>(bvlib::BitVector<N>(lhs), rhs);
 }
@@ -556,9 +549,9 @@ inline constexpr auto operator-(T lhs, bvlib::BitVector<N> const &rhs)
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto &operator-=(bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<MAX(N1, N2)> &operator-=(bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    static_assert(N1 >= N2);
+    static_assert(N1 >= N2, "RHS has more bits than LHS");
     bool borrow = false;
     for (size_type_t it = 0; it < N1; ++it) {
         lhs[it] = sub_bits(lhs[it], (it < N2) ? rhs[it] : false, borrow);
@@ -571,7 +564,7 @@ inline constexpr auto &operator-=(bvlib::BitVector<N1> &lhs, const bvlib::BitVec
 /// @param rhs the integer value.
 /// @return the difference between the two values.
 template <bvlib::size_type_t N>
-inline constexpr auto &operator-=(bvlib::BitVector<N> &lhs, bvlib::size_type_t rhs)
+inline bvlib::BitVector<N> &operator-=(bvlib::BitVector<N> &lhs, bvlib::size_type_t rhs)
 {
     return (lhs -= bvlib::BitVector<N>(rhs));
 }
@@ -585,19 +578,18 @@ inline constexpr auto &operator-=(bvlib::BitVector<N> &lhs, bvlib::size_type_t r
 /// @param rhs the second bitvector of size N2.
 /// @return a bitvector of size (MAX(N1, N2)*2), containing the multiplication result.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
+inline bvlib::BitVector<MAX(N1, N2) * 2> mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2), output_size = max_size * 2;
     bvlib::size_type_t it = 0;
-    bvlib::BitVector<output_size> result;
+    bvlib::BitVector<MAX(N1, N2) * 2> result;
     // Perform the multiplication.
     if (lhs.count() < rhs.count()) {
-        bvlib::BitVector<output_size> _rhs(rhs);
+        bvlib::BitVector<MAX(N1, N2) * 2> _rhs(rhs);
         for (; it < N1; ++it)
             if (lhs[it])
                 result += bvlib::shift_left(_rhs, it);
     } else {
-        bvlib::BitVector<output_size> _lhs(lhs);
+        bvlib::BitVector<MAX(N1, N2) * 2> _lhs(lhs);
         for (; it < N2; ++it)
             if (rhs[it])
                 result += bvlib::shift_left(_lhs, it);
@@ -610,7 +602,7 @@ inline constexpr auto mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> 
 /// @param rhs the second bitvector of size N2.
 /// @return a bitvector of size (MAX(N1, N2)*2), containing the multiplication result.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator*(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<MAX(N1, N2) * 2> operator*(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::mul<N1, N2>(lhs, rhs);
 }
@@ -619,8 +611,8 @@ inline constexpr auto operator*(const bvlib::BitVector<N1> &lhs, const bvlib::Bi
 /// @param lhs the bitvector of size N.
 /// @param rhs the integer value.
 /// @return a bitvector of size (N*2), containing the multiplication result.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator*(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bvlib::BitVector<N * 2> operator*(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return bvlib::mul<N, N>(lhs, bvlib::BitVector<N>(rhs));
 }
@@ -629,8 +621,8 @@ inline constexpr auto operator*(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector of size N.
 /// @return a bitvector of size (N*2), containing the multiplication result.
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator*(T lhs, bvlib::BitVector<N> const &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bvlib::BitVector<N * 2> operator*(T lhs, bvlib::BitVector<N> const &rhs)
 {
     return bvlib::mul<N, N>(bvlib::BitVector<N>(lhs), rhs);
 }
@@ -647,10 +639,9 @@ inline constexpr auto operator*(T lhs, bvlib::BitVector<N> const &rhs)
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto div(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
+inline std::pair<bvlib::BitVector<MAX(N1, N2)>, bvlib::BitVector<MAX(N1, N2)>> div(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
-    constexpr bvlib::size_type_t max_size = std::max(N1, N2);
-    bvlib::BitVector<max_size> qotient, remainder, support;
+    bvlib::BitVector<MAX(N1, N2)> qotient, remainder, support;
     if (rhs.none())
         throw std::domain_error("division by zero undefined");
     if (lhs.none())
@@ -694,7 +685,7 @@ inline constexpr auto div(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> 
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline constexpr auto operator/(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<MAX(N1, N2)> operator/(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::div<N1, N2>(lhs, rhs).first;
 }
@@ -706,8 +697,8 @@ inline constexpr auto operator/(const bvlib::BitVector<N1> &lhs, const bvlib::Bi
 /// second contains the reminder.
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator/(const bvlib::BitVector<N> &lhs, T rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bvlib::BitVector<N> operator/(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return bvlib::div<N, N>(lhs, bvlib::BitVector<N>(rhs)).first;
 }
@@ -719,8 +710,8 @@ inline constexpr auto operator/(const bvlib::BitVector<N> &lhs, T rhs)
 /// second contains the reminder.
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
-template <bvlib::size_type_t N, typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-inline constexpr auto operator/(T lhs, bvlib::BitVector<N> const &rhs)
+template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline bvlib::BitVector<N> operator/(T lhs, bvlib::BitVector<N> const &rhs)
 {
     return bvlib::div<N, N>(bvlib::BitVector<N>(lhs), rhs).first;
 }
