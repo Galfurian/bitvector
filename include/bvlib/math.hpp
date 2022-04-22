@@ -1,23 +1,6 @@
-/// @file bitvector_math.hpp
+/// @file math.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
-/// @copyright
-/// Copyright (c) 2019 Enrico Fraccaroli <enrico.fraccaroli@gmail.com>
-/// Permission is hereby granted, free of charge, to any person obtaining a
-/// copy of this software and associated documentation files (the "Software"),
-/// to deal in the Software without restriction, including without limitation
-/// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-/// and/or sell copies of the Software, and to permit persons to whom the
-/// Software is furnished to do so, subject to the following conditions:
-///     The above copyright notice and this permission notice shall be included
-///     in all copies or substantial portions of the Software.
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-/// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-/// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-/// DEALINGS IN THE SOFTWARE.
+/// @brief Mathematical operations among bitvectors.
 
 #pragma once
 
@@ -27,7 +10,6 @@
 
 namespace bvlib
 {
-#define MAX(V1, V2) ((V1) > (V2) ? (V1) : (V2))
 
 // ============================================================================
 // SUPPOR FUNCTIONS
@@ -117,9 +99,9 @@ inline bvlib::BitVector<N> shift_right(bvlib::BitVector<N> bitvector, bvlib::siz
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
 template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> operator<<(const bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> operator<<(const bvlib::BitVector<N> &bitvector, bvlib::size_type_t shift)
 {
-    return bvlib::shift_left(lhs, shift);
+    return bvlib::shift_left(bitvector, shift);
 }
 
 // ============================================================================
@@ -131,16 +113,16 @@ inline bvlib::BitVector<N> operator<<(const bvlib::BitVector<N> &lhs, bvlib::siz
 /// @param shift the amount to shift.
 /// @return the input bitvector, shifted.
 template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> &operator<<=(bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> &operator<<=(bvlib::BitVector<N> &bitvector, bvlib::size_type_t shift)
 {
     bvlib::size_type_t it = 0;
     if (shift > 0) {
         for (; it < (N - shift); ++it)
-            lhs.bits[it] = lhs.bits[it + shift];
+            bitvector.bits[it] = bitvector.bits[it + shift];
         for (; it < N; ++it)
-            lhs.bits[it] = false;
+            bitvector.bits[it] = false;
     }
-    return lhs;
+    return bitvector;
 }
 
 // ============================================================================
@@ -152,9 +134,9 @@ inline bvlib::BitVector<N> &operator<<=(bvlib::BitVector<N> &lhs, bvlib::size_ty
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
 template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> operator>>(const bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> operator>>(const bvlib::BitVector<N> &bitvector, bvlib::size_type_t shift)
 {
-    return bvlib::shift_right(lhs, shift);
+    return bvlib::shift_right(bitvector, shift);
 }
 
 // ============================================================================
@@ -166,16 +148,16 @@ inline bvlib::BitVector<N> operator>>(const bvlib::BitVector<N> &lhs, bvlib::siz
 /// @param shift the amount to shift.
 /// @return the input bitvector, shifted.
 template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> &operator>>=(bvlib::BitVector<N> &lhs, bvlib::size_type_t shift)
+inline bvlib::BitVector<N> &operator>>=(bvlib::BitVector<N> &bitvector, bvlib::size_type_t shift)
 {
     bvlib::size_type_t it = 0;
     if (shift > 0) {
         for (it = N - 1; it >= shift; --it)
-            lhs.bits[it] = lhs.bits[it - shift];
+            bitvector.bits[it] = bitvector.bits[it - shift];
         for (it = 0; it < shift; ++it)
-            lhs.bits[it] = false;
+            bitvector.bits[it] = false;
     }
-    return lhs;
+    return bitvector;
 }
 
 // ============================================================================
@@ -189,7 +171,7 @@ inline bvlib::BitVector<N> &operator>>=(bvlib::BitVector<N> &lhs, bvlib::size_ty
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
 inline bool operator==(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (bvlib::size_type_t it = MAX(N1, N2); it > 0; --it) {
+    for (bvlib::size_type_t it = std::max(N1, N2); it > 0; --it) {
         if ((((it - 1) < N1) ? lhs[it - 1] : false) != (((it - 1) < N2) ? rhs[it - 1] : false))
             return false;
     }
@@ -227,7 +209,7 @@ inline bool operator==(T lhs, const bvlib::BitVector<N> &rhs)
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
 inline bool operator!=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (bvlib::size_type_t it = MAX(N1, N2); it > 0; --it) {
+    for (bvlib::size_type_t it = std::max(N1, N2); it > 0; --it) {
         if ((((it - 1) < N1) ? lhs[it - 1] : false) != (((it - 1) < N2) ? rhs[it - 1] : false))
             return true;
     }
@@ -265,7 +247,7 @@ inline bool operator!=(T lhs, const bvlib::BitVector<N> &rhs)
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
 inline bool operator<(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (bvlib::size_type_t it = MAX(N1, N2); it > 0; --it) {
+    for (bvlib::size_type_t it = std::max(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (a && !b)
@@ -307,7 +289,7 @@ inline bool operator<(T lhs, const bvlib::BitVector<N> &rhs)
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
 inline bool operator<=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (size_type_t it = MAX(N1, N2); it > 0; --it) {
+    for (size_type_t it = std::max(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (a && !b)
@@ -349,7 +331,7 @@ inline bool operator<=(T lhs, const bvlib::BitVector<N> &rhs)
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
 inline bool operator>(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (size_type_t it = MAX(N1, N2); it > 0; --it) {
+    for (size_type_t it = std::max(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (!a && b)
@@ -391,7 +373,7 @@ inline bool operator>(T lhs, const bvlib::BitVector<N> &rhs)
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
 inline bool operator>=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (size_type_t it = MAX(N1, N2); it > 0; --it) {
+    for (size_type_t it = std::max(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (!a && b)
@@ -431,11 +413,11 @@ inline bool operator>=(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param rhs the second bitvector.
 /// @return the sum between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline bvlib::BitVector<MAX(N1, N2)> sum(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<std::max(N1, N2)> sum(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    bvlib::BitVector<MAX(N1, N2)> result;
+    bvlib::BitVector<std::max(N1, N2)> result;
     bool carry = false;
-    for (size_type_t it = 0; it < MAX(N1, N2); ++it) {
+    for (size_type_t it = 0; it < std::max(N1, N2); ++it) {
         result[it] = bvlib::add_bits((it < N1) ? lhs[it] : false, (it < N2) ? rhs[it] : false, carry);
     }
     return result;
@@ -446,7 +428,7 @@ inline bvlib::BitVector<MAX(N1, N2)> sum(const bvlib::BitVector<N1> &lhs, const 
 /// @param rhs the second bitvector.
 /// @return the sum between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline bvlib::BitVector<MAX(N1, N2)> operator+(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<std::max(N1, N2)> operator+(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::sum<N1, N2>(lhs, rhs);
 }
@@ -505,11 +487,11 @@ inline bvlib::BitVector<N> &operator+=(bvlib::BitVector<N> &lhs, bvlib::size_typ
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline bvlib::BitVector<MAX(N1, N2)> sub(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<std::max(N1, N2)> sub(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    bvlib::BitVector<MAX(N1, N2)> result;
+    bvlib::BitVector<std::max(N1, N2)> result;
     bool borrow = false;
-    for (size_type_t it = 0; it < MAX(N1, N2); ++it)
+    for (size_type_t it = 0; it < std::max(N1, N2); ++it)
         result[it] = bvlib::sub_bits((it < N1) ? lhs[it] : false, (it < N2) ? rhs[it] : false, borrow);
     return result;
 }
@@ -519,7 +501,7 @@ inline bvlib::BitVector<MAX(N1, N2)> sub(const bvlib::BitVector<N1> &lhs, const 
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline bvlib::BitVector<MAX(N1, N2)> operator-(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<std::max(N1, N2)> operator-(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::sub<N1, N2>(lhs, rhs);
 }
@@ -549,7 +531,7 @@ inline bvlib::BitVector<N> operator-(T lhs, bvlib::BitVector<N> const &rhs)
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline bvlib::BitVector<MAX(N1, N2)> &operator-=(bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<std::max(N1, N2)> &operator-=(bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     static_assert(N1 >= N2, "RHS has more bits than LHS");
     bool borrow = false;
@@ -576,20 +558,20 @@ inline bvlib::BitVector<N> &operator-=(bvlib::BitVector<N> &lhs, bvlib::size_typ
 /// @brief Multiplies two bitvectors.
 /// @param lhs the first bitvector of size N1.
 /// @param rhs the second bitvector of size N2.
-/// @return a bitvector of size (MAX(N1, N2)*2), containing the multiplication result.
+/// @return a bitvector of size (std::max(N1, N2)*2), containing the multiplication result.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline bvlib::BitVector<MAX(N1, N2) * 2> mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
+inline bvlib::BitVector<std::max(N1, N2) * 2> mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
     bvlib::size_type_t it = 0;
-    bvlib::BitVector<MAX(N1, N2) * 2> result;
+    bvlib::BitVector<std::max(N1, N2) * 2> result;
     // Perform the multiplication.
     if (lhs.count() < rhs.count()) {
-        bvlib::BitVector<MAX(N1, N2) * 2> _rhs(rhs);
+        bvlib::BitVector<std::max(N1, N2) * 2> _rhs(rhs);
         for (; it < N1; ++it)
             if (lhs[it])
                 result += bvlib::shift_left(_rhs, it);
     } else {
-        bvlib::BitVector<MAX(N1, N2) * 2> _lhs(lhs);
+        bvlib::BitVector<std::max(N1, N2) * 2> _lhs(lhs);
         for (; it < N2; ++it)
             if (rhs[it])
                 result += bvlib::shift_left(_lhs, it);
@@ -600,9 +582,9 @@ inline bvlib::BitVector<MAX(N1, N2) * 2> mul(bvlib::BitVector<N1> const &lhs, bv
 /// @brief Multiplies two bitvectors.
 /// @param lhs the first bitvector of size N1.
 /// @param rhs the second bitvector of size N2.
-/// @return a bitvector of size (MAX(N1, N2)*2), containing the multiplication result.
+/// @return a bitvector of size (std::max(N1, N2)*2), containing the multiplication result.
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline bvlib::BitVector<MAX(N1, N2) * 2> operator*(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<std::max(N1, N2) * 2> operator*(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::mul<N1, N2>(lhs, rhs);
 }
@@ -634,14 +616,14 @@ inline bvlib::BitVector<N * 2> operator*(T lhs, bvlib::BitVector<N> const &rhs)
 /// @brief Performs the division between two bitvectors.
 /// @param lhs the first bitvector of size N1.
 /// @param rhs the second bitvector of size N2.
-/// @return two bitvectors of size MAX(N1, N2), the first contains the quotient
+/// @return two bitvectors of size std::max(N1, N2), the first contains the quotient
 /// and the second contains the reminder.
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline std::pair<bvlib::BitVector<MAX(N1, N2)>, bvlib::BitVector<MAX(N1, N2)>> div(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
+inline std::pair<bvlib::BitVector<std::max(N1, N2)>, bvlib::BitVector<std::max(N1, N2)>> div(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
-    bvlib::BitVector<MAX(N1, N2)> qotient, remainder, support;
+    bvlib::BitVector<std::max(N1, N2)> qotient, remainder, support;
     if (rhs.none())
         throw std::domain_error("division by zero undefined");
     if (lhs.none())
@@ -680,12 +662,12 @@ inline std::pair<bvlib::BitVector<MAX(N1, N2)>, bvlib::BitVector<MAX(N1, N2)>> d
 /// @brief Performs the division between two bitvectors.
 /// @param lhs the first bitvector of size N1.
 /// @param rhs the second bitvector of size N2.
-/// @return two bitvectors of size MAX(N1, N2), the first contains the quotient
+/// @return two bitvectors of size std::max(N1, N2), the first contains the quotient
 /// and the second contains the reminder.
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
 template <bvlib::size_type_t N1, bvlib::size_type_t N2>
-inline bvlib::BitVector<MAX(N1, N2)> operator/(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
+inline bvlib::BitVector<std::max(N1, N2)> operator/(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::div<N1, N2>(lhs, rhs).first;
 }

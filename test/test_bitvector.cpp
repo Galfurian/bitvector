@@ -148,7 +148,7 @@ int test_operators()
     return 0;
 }
 
-int main(int argc, char *argv[])
+int main(int, char *[])
 {
     bvlib::BitVector<8> a(8);
     std::cout << a.to_string() << "\n";

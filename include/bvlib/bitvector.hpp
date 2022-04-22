@@ -1,24 +1,6 @@
 /// @file bitvector.hpp
-/// @brief Complete BitVector class.
-/// @date 7/4/19
-/// @author Enrico Fraccaroli
-/// @copyright
-/// Copyright (c) 2019 Enrico Fraccaroli <enrico.fraccaroli@gmail.com>
-/// Permission is hereby granted, free of charge, to any person obtaining a
-/// copy of this software and associated documentation files (the "Software"),
-/// to deal in the Software without restriction, including without limitation
-/// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-/// and/or sell copies of the Software, and to permit persons to whom the
-/// Software is furnished to do so, subject to the following conditions:
-///     The above copyright notice and this permission notice shall be included
-///     in all copies or substantial portions of the Software.
-/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-/// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-/// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-/// DEALINGS IN THE SOFTWARE.
+/// @author Enrico Fraccaroli (enry.frak@gmail.com)
+/// @brief Base bitvector class.
 
 #pragma once
 
@@ -29,6 +11,7 @@
 namespace bvlib
 {
 
+/// Type for sizes inside the bvlib namespace.
 using size_type_t = long unsigned int;
 
 /// @brief Class which reproduces the behaviour of bit-vector.
@@ -39,6 +22,7 @@ public:
     /// Internal vector of bits.
     bool bits[N];
 
+    /// @brief Construct a new bitvector.
     explicit BitVector()
         : bits()
     {
@@ -46,6 +30,8 @@ public:
             bits[it] = false;
     }
 
+    /// @brief Construct a new bitvector and intializes it with the given value.
+    /// @param value the initial value.
     template <typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
     explicit BitVector(T value)
         : bits()
@@ -56,6 +42,8 @@ public:
         }
     }
 
+    /// @brief Construct a new bitvector based on the given string (e.g. "1010111").
+    /// @param str the input string.
     explicit BitVector(const std::string &str)
         : bits()
     {
@@ -63,13 +51,8 @@ public:
             this->at(it) = (str[len - 1 - it] == '1');
     }
 
-    BitVector(BitVector<N> const &other)
-        : bits()
-    {
-        for (bvlib::size_type_t it = 0; it < N; ++it)
-            this->at(it) = other[it];
-    }
-
+    /// @brief Copies the other bitvector into this one.
+    /// @param other the other bitvector.
     template <bvlib::size_type_t N2>
     explicit BitVector(BitVector<N2> const &other)
         : bits()
