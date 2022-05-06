@@ -260,22 +260,22 @@ public:
     }
 
     /// @brief Transforms this BitVector to number.
-    template <typename T = long>
-    inline T to_number() const
+    template <typename T>
+    constexpr inline T to_number() const
     {
         T result = 0;
         for (long it = N - 1; it >= 0; --it)
             if (bits[it])
-                result += std::pow(2, N - it - 1);
+                result += static_cast<T>(std::pow(2, N - it - 1));
         return result;
     }
 };
 
 /// @brief Overrides the output stream operator.
 template <long unsigned int N>
-inline std::ostream &operator<<(std::ostream &lhs, bvlib::BitVector<N> const &rhs)
+inline std::ostream &operator<<(std::ostream &lhs, const bvlib::BitVector<N> &rhs)
 {
-    lhs << rhs.to_number();
+    lhs << rhs.template to_number<long>();
     return lhs;
 }
 

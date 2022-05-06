@@ -45,7 +45,7 @@ inline bool sub_bits(bool b1, bool b2, bool &borrow)
 template <std::size_t N>
 inline std::size_t most_significant_bit(const bvlib::BitVector<N> &bitvector)
 {
-    for (std::size_t i = N - 1; i >= 0; i--)
+    for (long i = N - 1; i >= 0; i--)
         if (bitvector[i])
             return i;
     return std::size_t(0);

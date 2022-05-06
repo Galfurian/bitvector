@@ -2,7 +2,7 @@
 # @brief  : Root cmake file.
 # @author : Enrico Fraccaroli
 # @create : 23/03/2021
-# @update : 23/03/2021
+# @update : 05/06/2022
 # -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
@@ -69,21 +69,26 @@ find_package(Doxygen)
 if(DOXYGEN_FOUND)
     # Doxygen theme
     include(FetchContent)
-    FetchContent_Declare(DoxygenAwesome
+
+    message(STATUS "Retrieving `doxygen-awesome-css`...")
+    FetchContent_Declare(
+        doxygenawesome
         GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
         GIT_TAG 4cd62308d825fe0396d2f66ffbab45d0e247724c # 2.0.3
     )
-    FetchContent_MakeAvailable(DoxygenAwesome)
-    FetchContent_GetProperties(DoxygenAwesome SOURCE_DIR DoxygenAwesome_SOURCE_DIR)
+    FetchContent_GetProperties(doxygenawesome)
+    if(NOT doxygenawesome_POPULATED)
+        FetchContent_MakeAvailable(doxygenawesome)
+    endif()
 
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
     set(DOXYGEN_GENERATE_TREEVIEW YES)
-    set(DOXYGEN_HTML_HEADER ${DoxygenAwesome_SOURCE_DIR}/doxygen-custom/header.html)
-    set(DOXYGEN_HTML_EXTRA_STYLESHEET ${DoxygenAwesome_SOURCE_DIR}/doxygen-awesome.css)
+    set(DOXYGEN_HTML_HEADER ${doxygenawesome_SOURCE_DIR}/doxygen-custom/header.html)
+    set(DOXYGEN_HTML_EXTRA_STYLESHEET ${doxygenawesome_SOURCE_DIR}/doxygen-awesome.css)
     set(DOXYGEN_HTML_EXTRA_FILES
-        ${DoxygenAwesome_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js
-        ${DoxygenAwesome_SOURCE_DIR}/doxygen-awesome-paragraph-link.js
-        ${DoxygenAwesome_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js
+        ${doxygenawesome_SOURCE_DIR}/doxygen-awesome-fragment-copy-button.js
+        ${doxygenawesome_SOURCE_DIR}/doxygen-awesome-paragraph-link.js
+        ${doxygenawesome_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js
     )
 
     doxygen_add_docs(${PROJECT_NAME}_documentation
@@ -94,9 +99,16 @@ if(DOXYGEN_FOUND)
 endif()
 
 # -----------------------------------------------------------------------------
+# Examples
+# -----------------------------------------------------------------------------
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+# -----------------------------------------------------------------------------
 # Add tests.
 # -----------------------------------------------------------------------------
 # CMake has support for adding tests to a project:
 enable_testing()
 # Add the subdirectory containing the tests (which imports also their target).
-add_subdirectory(test)
+add_subdirectory(tests)
