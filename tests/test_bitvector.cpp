@@ -7,18 +7,18 @@
 #include <vector>
 #include <random>
 
-template <unsigned long N>
+template <std::size_t N>
 struct test_bv_pair_t {
     bvlib::BitVector<N> bitvector;
-    unsigned long original;
-    test_bv_pair_t(unsigned long _original = 0)
+    std::size_t original;
+    test_bv_pair_t(std::size_t _original = 0)
         : bitvector(_original),
           original(_original)
     {
     }
 };
 
-template <unsigned long N1, unsigned long N2, unsigned long QT>
+template <std::size_t N1, std::size_t N2, std::size_t QT>
 int test_operators()
 {
     test_bv_pair_t<N1> inputs1[QT];
@@ -26,15 +26,15 @@ int test_operators()
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<unsigned long> distr(1UL, std::pow(N2 / 2, 2) - 1);
+    std::uniform_int_distribution<std::size_t> distr(1UL, static_cast<std::size_t>(std::pow(N2 / 2, 2) - 1));
 
-    for (unsigned long i = 0; i < QT; ++i) {
+    for (std::size_t i = 0; i < QT; ++i) {
         inputs1[i] = test_bv_pair_t<N1>(distr(gen));
         inputs2[i] = test_bv_pair_t<N2>(distr(gen));
     }
 
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector + inputs2[j].bitvector;
             auto nm_result = inputs1[i].original + inputs2[j].original;
             if (bv_result != nm_result) {
@@ -44,8 +44,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             if (inputs1[i].original < inputs2[j].original)
                 continue;
             auto bv_result = inputs1[i].bitvector - inputs2[j].bitvector;
@@ -57,8 +57,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector * inputs2[j].bitvector;
             auto nm_result = inputs1[i].original * inputs2[j].original;
             if (bv_result != nm_result) {
@@ -68,8 +68,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector / inputs2[j].bitvector;
             auto nm_result = inputs1[i].original / inputs2[j].original;
             if (bv_result != nm_result) {
@@ -79,8 +79,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector < inputs2[j].bitvector;
             auto nm_result = inputs1[i].original < inputs2[j].original;
             if (bv_result != nm_result) {
@@ -90,8 +90,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector <= inputs2[j].bitvector;
             auto nm_result = inputs1[i].original <= inputs2[j].original;
             if (bv_result != nm_result) {
@@ -101,8 +101,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector > inputs2[j].bitvector;
             auto nm_result = inputs1[i].original > inputs2[j].original;
             if (bv_result != nm_result) {
@@ -112,8 +112,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector >= inputs2[j].bitvector;
             auto nm_result = inputs1[i].original >= inputs2[j].original;
             if (bv_result != nm_result) {
@@ -123,8 +123,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector == inputs2[j].bitvector;
             auto nm_result = inputs1[i].original == inputs2[j].original;
             if (bv_result != nm_result) {
@@ -134,8 +134,8 @@ int test_operators()
             }
         }
     }
-    for (unsigned long i = 0; i < QT; ++i) {
-        for (unsigned long j = 0; j < QT; ++j) {
+    for (std::size_t i = 0; i < QT; ++i) {
+        for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector != inputs2[j].bitvector;
             auto nm_result = inputs1[i].original != inputs2[j].original;
             if (bv_result != nm_result) {
