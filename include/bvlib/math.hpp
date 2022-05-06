@@ -42,13 +42,13 @@ inline bool sub_bits(bool b1, bool b2, bool &borrow)
 /// @brief Returns the position of the most significant bit inside the given bitvector.
 /// @param bitvector the input bitvector.
 /// @return position of the most significant bit.
-template <bvlib::size_type_t N>
-inline bvlib::size_type_t most_significant_bit(const bvlib::BitVector<N> &bitvector)
+template <std::size_t N>
+inline std::size_t most_significant_bit(const bvlib::BitVector<N> &bitvector)
 {
-    for (bvlib::size_type_t i = N - 1; i >= 0; i--)
+    for (std::size_t i = N - 1; i >= 0; i--)
         if (bitvector[i])
             return i;
-    return bvlib::size_type_t(0);
+    return std::size_t(0);
 }
 
 // ============================================================================
@@ -59,10 +59,10 @@ inline bvlib::size_type_t most_significant_bit(const bvlib::BitVector<N> &bitvec
 /// @param bitvector the bitvector.
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
-template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> shift_left(bvlib::BitVector<N> bitvector, bvlib::size_type_t shift)
+template <std::size_t N>
+inline bvlib::BitVector<N> shift_left(bvlib::BitVector<N> bitvector, std::size_t shift)
 {
-    bvlib::size_type_t it = 0;
+    std::size_t it = 0;
     shift                 = std::min(N, shift);
     if (shift > 0) {
         for (; it < (N - shift); ++it)
@@ -77,10 +77,10 @@ inline bvlib::BitVector<N> shift_left(bvlib::BitVector<N> bitvector, bvlib::size
 /// @param bitvector the bitvector.
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
-template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> shift_right(bvlib::BitVector<N> bitvector, bvlib::size_type_t shift)
+template <std::size_t N>
+inline bvlib::BitVector<N> shift_right(bvlib::BitVector<N> bitvector, std::size_t shift)
 {
-    bvlib::size_type_t it;
+    std::size_t it;
     if (shift > 0) {
         for (it = N - 1; it >= shift; --it)
             bitvector.bits[it] = bitvector.bits[it - shift];
@@ -98,8 +98,8 @@ inline bvlib::BitVector<N> shift_right(bvlib::BitVector<N> bitvector, bvlib::siz
 /// @param bitvector the bitvector.
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
-template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> operator<<(const bvlib::BitVector<N> &bitvector, bvlib::size_type_t shift)
+template <std::size_t N>
+inline bvlib::BitVector<N> operator<<(const bvlib::BitVector<N> &bitvector, std::size_t shift)
 {
     return bvlib::shift_left(bitvector, shift);
 }
@@ -112,10 +112,10 @@ inline bvlib::BitVector<N> operator<<(const bvlib::BitVector<N> &bitvector, bvli
 /// @param bitvector the bitvector.
 /// @param shift the amount to shift.
 /// @return the input bitvector, shifted.
-template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> &operator<<=(bvlib::BitVector<N> &bitvector, bvlib::size_type_t shift)
+template <std::size_t N>
+inline bvlib::BitVector<N> &operator<<=(bvlib::BitVector<N> &bitvector, std::size_t shift)
 {
-    bvlib::size_type_t it = 0;
+    std::size_t it = 0;
     if (shift > 0) {
         for (; it < (N - shift); ++it)
             bitvector.bits[it] = bitvector.bits[it + shift];
@@ -133,8 +133,8 @@ inline bvlib::BitVector<N> &operator<<=(bvlib::BitVector<N> &bitvector, bvlib::s
 /// @param bitvector the bitvector.
 /// @param shift the amount to shift.
 /// @return the shifted bitvector.
-template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> operator>>(const bvlib::BitVector<N> &bitvector, bvlib::size_type_t shift)
+template <std::size_t N>
+inline bvlib::BitVector<N> operator>>(const bvlib::BitVector<N> &bitvector, std::size_t shift)
 {
     return bvlib::shift_right(bitvector, shift);
 }
@@ -147,10 +147,10 @@ inline bvlib::BitVector<N> operator>>(const bvlib::BitVector<N> &bitvector, bvli
 /// @param bitvector the bitvector.
 /// @param shift the amount to shift.
 /// @return the input bitvector, shifted.
-template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> &operator>>=(bvlib::BitVector<N> &bitvector, bvlib::size_type_t shift)
+template <std::size_t N>
+inline bvlib::BitVector<N> &operator>>=(bvlib::BitVector<N> &bitvector, std::size_t shift)
 {
-    bvlib::size_type_t it = 0;
+    std::size_t it = 0;
     if (shift > 0) {
         for (it = N - 1; it >= shift; --it)
             bitvector.bits[it] = bitvector.bits[it - shift];
@@ -168,10 +168,10 @@ inline bvlib::BitVector<N> &operator>>=(bvlib::BitVector<N> &bitvector, bvlib::s
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return if they are equal.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bool operator==(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (bvlib::size_type_t it = std::max(N1, N2); it > 0; --it) {
+    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
         if ((((it - 1) < N1) ? lhs[it - 1] : false) != (((it - 1) < N2) ? rhs[it - 1] : false))
             return false;
     }
@@ -182,7 +182,7 @@ inline bool operator==(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if they are equal.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator==(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs == bvlib::BitVector<N>(rhs);
@@ -192,7 +192,7 @@ inline bool operator==(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if they are equal.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator==(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) == rhs;
@@ -206,10 +206,10 @@ inline bool operator==(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return if they are equal.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bool operator!=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (bvlib::size_type_t it = std::max(N1, N2); it > 0; --it) {
+    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
         if ((((it - 1) < N1) ? lhs[it - 1] : false) != (((it - 1) < N2) ? rhs[it - 1] : false))
             return true;
     }
@@ -220,7 +220,7 @@ inline bool operator!=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if they are equal.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator!=(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs != bvlib::BitVector<N>(rhs);
@@ -230,7 +230,7 @@ inline bool operator!=(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if they are equal.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator!=(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) != rhs;
@@ -244,10 +244,10 @@ inline bool operator!=(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return if first value is smaller than the second value.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bool operator<(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (bvlib::size_type_t it = std::max(N1, N2); it > 0; --it) {
+    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (a && !b)
@@ -262,7 +262,7 @@ inline bool operator<(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if first value is smaller than the second value.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator<(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs < bvlib::BitVector<N>(rhs);
@@ -272,7 +272,7 @@ inline bool operator<(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if first value is smaller than the second value.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator<(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) < rhs;
@@ -286,10 +286,10 @@ inline bool operator<(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return if first value is smaller than or equal to the second value.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bool operator<=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (size_type_t it = std::max(N1, N2); it > 0; --it) {
+    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (a && !b)
@@ -304,7 +304,7 @@ inline bool operator<=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if first value is smaller than or equal to the second value.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator<=(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs <= bvlib::BitVector<N>(rhs);
@@ -314,7 +314,7 @@ inline bool operator<=(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if first value is smaller than or equal to the second value.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator<=(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) <= rhs;
@@ -328,10 +328,10 @@ inline bool operator<=(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return if first value is greather than the second value.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bool operator>(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (size_type_t it = std::max(N1, N2); it > 0; --it) {
+    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (!a && b)
@@ -346,7 +346,7 @@ inline bool operator>(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if first value is greather than the second value.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator>(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs > bvlib::BitVector<N>(rhs);
@@ -356,7 +356,7 @@ inline bool operator>(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if first value is greather than the second value.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator>(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) > rhs;
@@ -370,10 +370,10 @@ inline bool operator>(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return if first value is greather than or equal to the second value.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bool operator>=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (size_type_t it = std::max(N1, N2); it > 0; --it) {
+    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
         bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
         bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
         if (!a && b)
@@ -388,7 +388,7 @@ inline bool operator>=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return if first value is greather than or equal to the second value.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator>=(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return lhs >= bvlib::BitVector<N>(rhs);
@@ -398,7 +398,7 @@ inline bool operator>=(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return if first value is greather than or equal to the second value.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bool operator>=(T lhs, const bvlib::BitVector<N> &rhs)
 {
     return bvlib::BitVector<N>(lhs) >= rhs;
@@ -412,12 +412,12 @@ inline bool operator>=(T lhs, const bvlib::BitVector<N> &rhs)
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return the sum between the two values.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2)> sum(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     bvlib::BitVector<std::max(N1, N2)> result;
     bool carry = false;
-    for (size_type_t it = 0; it < std::max(N1, N2); ++it) {
+    for (std::size_t it = 0; it < std::max(N1, N2); ++it) {
         result[it] = bvlib::add_bits((it < N1) ? lhs[it] : false, (it < N2) ? rhs[it] : false, carry);
     }
     return result;
@@ -427,7 +427,7 @@ inline bvlib::BitVector<std::max(N1, N2)> sum(const bvlib::BitVector<N1> &lhs, c
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return the sum between the two values.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2)> operator+(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::sum<N1, N2>(lhs, rhs);
@@ -437,7 +437,7 @@ inline bvlib::BitVector<std::max(N1, N2)> operator+(const bvlib::BitVector<N1> &
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return the sum between the two values.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bvlib::BitVector<N> operator+(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return bvlib::sum<N, N>(lhs, BitVector<N>(rhs));
@@ -447,7 +447,7 @@ inline bvlib::BitVector<N> operator+(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return the sum between the two values.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bvlib::BitVector<N> operator+(T lhs, BitVector<N> const &rhs)
 {
     return bvlib::sum<N, N>(bvlib::BitVector<N>(lhs), rhs);
@@ -457,12 +457,12 @@ inline bvlib::BitVector<N> operator+(T lhs, BitVector<N> const &rhs)
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return the sum between the two values.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<N1> &operator+=(bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     static_assert(N1 >= N2, "RHS has more bits than LHS");
     bool carry = false;
-    for (size_type_t it = 0; it < N1; ++it) {
+    for (std::size_t it = 0; it < N1; ++it) {
         lhs[it] = add_bits(lhs[it], (it < N2) ? rhs[it] : false, carry);
     }
     return lhs;
@@ -472,8 +472,8 @@ inline bvlib::BitVector<N1> &operator+=(bvlib::BitVector<N1> &lhs, const bvlib::
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return the sum between the two values.
-template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> &operator+=(bvlib::BitVector<N> &lhs, bvlib::size_type_t rhs)
+template <std::size_t N>
+inline bvlib::BitVector<N> &operator+=(bvlib::BitVector<N> &lhs, std::size_t rhs)
 {
     return (lhs += BitVector<N>(rhs));
 }
@@ -486,12 +486,12 @@ inline bvlib::BitVector<N> &operator+=(bvlib::BitVector<N> &lhs, bvlib::size_typ
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2)> sub(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     bvlib::BitVector<std::max(N1, N2)> result;
     bool borrow = false;
-    for (size_type_t it = 0; it < std::max(N1, N2); ++it)
+    for (std::size_t it = 0; it < std::max(N1, N2); ++it)
         result[it] = bvlib::sub_bits((it < N1) ? lhs[it] : false, (it < N2) ? rhs[it] : false, borrow);
     return result;
 }
@@ -500,7 +500,7 @@ inline bvlib::BitVector<std::max(N1, N2)> sub(const bvlib::BitVector<N1> &lhs, c
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2)> operator-(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::sub<N1, N2>(lhs, rhs);
@@ -510,7 +510,7 @@ inline bvlib::BitVector<std::max(N1, N2)> operator-(const bvlib::BitVector<N1> &
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return the difference between the two values.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bvlib::BitVector<N> operator-(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return bvlib::sub<N, N>(lhs, bvlib::BitVector<N>(rhs));
@@ -520,7 +520,7 @@ inline bvlib::BitVector<N> operator-(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector.
 /// @return the difference between the two values.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bvlib::BitVector<N> operator-(T lhs, bvlib::BitVector<N> const &rhs)
 {
     return bvlib::sub<N, N>(bvlib::BitVector<N>(lhs), rhs);
@@ -530,12 +530,12 @@ inline bvlib::BitVector<N> operator-(T lhs, bvlib::BitVector<N> const &rhs)
 /// @param lhs the first bitvector.
 /// @param rhs the second bitvector.
 /// @return the difference between the two values.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2)> &operator-=(bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     static_assert(N1 >= N2, "RHS has more bits than LHS");
     bool borrow = false;
-    for (size_type_t it = 0; it < N1; ++it) {
+    for (std::size_t it = 0; it < N1; ++it) {
         lhs[it] = sub_bits(lhs[it], (it < N2) ? rhs[it] : false, borrow);
     }
     return lhs;
@@ -545,8 +545,8 @@ inline bvlib::BitVector<std::max(N1, N2)> &operator-=(bvlib::BitVector<N1> &lhs,
 /// @param lhs the bitvector.
 /// @param rhs the integer value.
 /// @return the difference between the two values.
-template <bvlib::size_type_t N>
-inline bvlib::BitVector<N> &operator-=(bvlib::BitVector<N> &lhs, bvlib::size_type_t rhs)
+template <std::size_t N>
+inline bvlib::BitVector<N> &operator-=(bvlib::BitVector<N> &lhs, std::size_t rhs)
 {
     return (lhs -= bvlib::BitVector<N>(rhs));
 }
@@ -559,10 +559,10 @@ inline bvlib::BitVector<N> &operator-=(bvlib::BitVector<N> &lhs, bvlib::size_typ
 /// @param lhs the first bitvector of size N1.
 /// @param rhs the second bitvector of size N2.
 /// @return a bitvector of size (std::max(N1, N2)*2), containing the multiplication result.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2) * 2> mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
-    bvlib::size_type_t it = 0;
+    std::size_t it = 0;
     bvlib::BitVector<std::max(N1, N2) * 2> result;
     // Perform the multiplication.
     if (lhs.count() < rhs.count()) {
@@ -583,7 +583,7 @@ inline bvlib::BitVector<std::max(N1, N2) * 2> mul(bvlib::BitVector<N1> const &lh
 /// @param lhs the first bitvector of size N1.
 /// @param rhs the second bitvector of size N2.
 /// @return a bitvector of size (std::max(N1, N2)*2), containing the multiplication result.
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2) * 2> operator*(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::mul<N1, N2>(lhs, rhs);
@@ -593,7 +593,7 @@ inline bvlib::BitVector<std::max(N1, N2) * 2> operator*(const bvlib::BitVector<N
 /// @param lhs the bitvector of size N.
 /// @param rhs the integer value.
 /// @return a bitvector of size (N*2), containing the multiplication result.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bvlib::BitVector<N * 2> operator*(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return bvlib::mul<N, N>(lhs, bvlib::BitVector<N>(rhs));
@@ -603,7 +603,7 @@ inline bvlib::BitVector<N * 2> operator*(const bvlib::BitVector<N> &lhs, T rhs)
 /// @param lhs the integer value.
 /// @param rhs the bitvector of size N.
 /// @return a bitvector of size (N*2), containing the multiplication result.
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bvlib::BitVector<N * 2> operator*(T lhs, bvlib::BitVector<N> const &rhs)
 {
     return bvlib::mul<N, N>(bvlib::BitVector<N>(lhs), rhs);
@@ -620,7 +620,7 @@ inline bvlib::BitVector<N * 2> operator*(T lhs, bvlib::BitVector<N> const &rhs)
 /// and the second contains the reminder.
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline std::pair<bvlib::BitVector<std::max(N1, N2)>, bvlib::BitVector<std::max(N1, N2)>> div(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
     bvlib::BitVector<std::max(N1, N2)> qotient, remainder, support;
@@ -666,7 +666,7 @@ inline std::pair<bvlib::BitVector<std::max(N1, N2)>, bvlib::BitVector<std::max(N
 /// and the second contains the reminder.
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
-template <bvlib::size_type_t N1, bvlib::size_type_t N2>
+template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2)> operator/(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
     return bvlib::div<N1, N2>(lhs, rhs).first;
@@ -679,7 +679,7 @@ inline bvlib::BitVector<std::max(N1, N2)> operator/(const bvlib::BitVector<N1> &
 /// second contains the reminder.
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bvlib::BitVector<N> operator/(const bvlib::BitVector<N> &lhs, T rhs)
 {
     return bvlib::div<N, N>(lhs, bvlib::BitVector<N>(rhs)).first;
@@ -692,7 +692,7 @@ inline bvlib::BitVector<N> operator/(const bvlib::BitVector<N> &lhs, T rhs)
 /// second contains the reminder.
 /// @details Original version available in: "C++ Cookbook - By D. Ryan Stephens,
 /// Ryan Stephens, Christopher Diggins, Jeff Cogswell, Jonathan Turkanis"
-template <bvlib::size_type_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline bvlib::BitVector<N> operator/(T lhs, bvlib::BitVector<N> const &rhs)
 {
     return bvlib::div<N, N>(bvlib::BitVector<N>(lhs), rhs).first;
