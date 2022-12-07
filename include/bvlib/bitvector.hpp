@@ -271,12 +271,4 @@ public:
     }
 };
 
-/// @brief Overrides the output stream operator.
-template <long unsigned int N>
-inline std::ostream &operator<<(std::ostream &lhs, const bvlib::BitVector<N> &rhs)
-{
-    lhs << rhs.template to_number<long>();
-    return lhs;
-}
-
 } // namespace bvlib

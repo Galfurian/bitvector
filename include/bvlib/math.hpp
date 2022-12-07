@@ -63,7 +63,7 @@ template <std::size_t N>
 inline bvlib::BitVector<N> shift_left(bvlib::BitVector<N> bitvector, std::size_t shift)
 {
     std::size_t it = 0;
-    shift                 = std::min(N, shift);
+    shift          = std::min(N, shift);
     if (shift > 0) {
         for (; it < (N - shift); ++it)
             bitvector.bits[it] = bitvector.bits[it + shift];
@@ -171,8 +171,19 @@ inline bvlib::BitVector<N> &operator>>=(bvlib::BitVector<N> &bitvector, std::siz
 template <std::size_t N1, std::size_t N2>
 inline bool operator==(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
-        if ((((it - 1) < N1) ? lhs[it - 1] : false) != (((it - 1) < N2) ? rhs[it - 1] : false))
+    constexpr std::size_t min = std::min(N1, N2);
+    std::size_t it;
+    if constexpr (N1 > N2) {
+        for (it = N1; it > min; --it)
+            if (lhs[it - 1])
+                return false;
+    } else {
+        for (it = N2; it > min; --it)
+            if (rhs[it - 1])
+                return false;
+    }
+    for (; it > 0; --it) {
+        if (lhs[it - 1] != rhs[it - 1])
             return false;
     }
     return true;
@@ -209,8 +220,19 @@ inline bool operator==(T lhs, const bvlib::BitVector<N> &rhs)
 template <std::size_t N1, std::size_t N2>
 inline bool operator!=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
-        if ((((it - 1) < N1) ? lhs[it - 1] : false) != (((it - 1) < N2) ? rhs[it - 1] : false))
+    constexpr std::size_t min = std::min(N1, N2);
+    std::size_t it;
+    if constexpr (N1 > N2) {
+        for (it = N1; it > min; --it)
+            if (lhs[it - 1])
+                return true;
+    } else {
+        for (it = N2; it > min; --it)
+            if (rhs[it - 1])
+                return true;
+    }
+    for (; it > 0; --it) {
+        if (lhs[it - 1] != rhs[it - 1])
             return true;
     }
     return false;
@@ -247,9 +269,19 @@ inline bool operator!=(T lhs, const bvlib::BitVector<N> &rhs)
 template <std::size_t N1, std::size_t N2>
 inline bool operator<(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
-        bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
-        bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
+    constexpr std::size_t min = std::min(N1, N2);
+    std::size_t it;
+    if constexpr (N1 > N2) {
+        for (it = N1; it > min; --it)
+            if (lhs[it - 1])
+                return false;
+    } else {
+        for (it = N2; it > min; --it)
+            if (rhs[it - 1])
+                return true;
+    }
+    for (; it > 0; --it) {
+        const bool a = lhs[it - 1], b = rhs[it - 1];
         if (a && !b)
             return false;
         if (!a && b)
@@ -289,9 +321,19 @@ inline bool operator<(T lhs, const bvlib::BitVector<N> &rhs)
 template <std::size_t N1, std::size_t N2>
 inline bool operator<=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
-        bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
-        bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
+    constexpr std::size_t min = std::min(N1, N2);
+    std::size_t it;
+    if constexpr (N1 > N2) {
+        for (it = N1; it > min; --it)
+            if (lhs[it - 1])
+                return false;
+    } else {
+        for (it = N2; it > min; --it)
+            if (rhs[it - 1])
+                return true;
+    }
+    for (; it > 0; --it) {
+        const bool a = lhs[it - 1], b = rhs[it - 1];
         if (a && !b)
             return false;
         if (!a && b)
@@ -331,13 +373,23 @@ inline bool operator<=(T lhs, const bvlib::BitVector<N> &rhs)
 template <std::size_t N1, std::size_t N2>
 inline bool operator>(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
-        bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
-        bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
-        if (!a && b)
-            return false;
+    constexpr std::size_t min = std::min(N1, N2);
+    std::size_t it;
+    if constexpr (N1 > N2) {
+        for (it = N1; it > min; --it)
+            if (lhs[it - 1])
+                return true;
+    } else {
+        for (it = N2; it > min; --it)
+            if (rhs[it - 1])
+                return false;
+    }
+    for (; it > 0; --it) {
+        const bool a = lhs[it - 1], b = rhs[it - 1];
         if (a && !b)
             return true;
+        if (!a && b)
+            return false;
     }
     return false;
 }
@@ -373,13 +425,23 @@ inline bool operator>(T lhs, const bvlib::BitVector<N> &rhs)
 template <std::size_t N1, std::size_t N2>
 inline bool operator>=(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    for (std::size_t it = std::max(N1, N2); it > 0; --it) {
-        bool a = ((it - 1) < N1) ? lhs[it - 1] : false;
-        bool b = ((it - 1) < N2) ? rhs[it - 1] : false;
-        if (!a && b)
-            return false;
+    constexpr std::size_t min = std::min(N1, N2);
+    std::size_t it;
+    if constexpr (N1 > N2) {
+        for (it = N1; it > min; --it)
+            if (lhs[it - 1])
+                return true;
+    } else {
+        for (it = N2; it > min; --it)
+            if (rhs[it - 1])
+                return false;
+    }
+    for (; it > 0; --it) {
+        const bool a = lhs[it - 1], b = rhs[it - 1];
         if (a && !b)
             return true;
+        if (!a && b)
+            return false;
     }
     return true;
 }
@@ -415,9 +477,10 @@ inline bool operator>=(T lhs, const bvlib::BitVector<N> &rhs)
 template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2)> sum(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    bvlib::BitVector<std::max(N1, N2)> result;
+    constexpr std::size_t max = std::max(N1, N2);
+    bvlib::BitVector<max> result;
     bool carry = false;
-    for (std::size_t it = 0; it < std::max(N1, N2); ++it) {
+    for (std::size_t it = 0; it < max; ++it) {
         result[it] = bvlib::add_bits((it < N1) ? lhs[it] : false, (it < N2) ? rhs[it] : false, carry);
     }
     return result;
@@ -489,9 +552,10 @@ inline bvlib::BitVector<N> &operator+=(bvlib::BitVector<N> &lhs, std::size_t rhs
 template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2)> sub(const bvlib::BitVector<N1> &lhs, const bvlib::BitVector<N2> &rhs)
 {
-    bvlib::BitVector<std::max(N1, N2)> result;
+    constexpr std::size_t max = std::max(N1, N2);
+    bvlib::BitVector<max> result;
     bool borrow = false;
-    for (std::size_t it = 0; it < std::max(N1, N2); ++it)
+    for (std::size_t it = 0; it < max; ++it)
         result[it] = bvlib::sub_bits((it < N1) ? lhs[it] : false, (it < N2) ? rhs[it] : false, borrow);
     return result;
 }
@@ -562,16 +626,17 @@ inline bvlib::BitVector<N> &operator-=(bvlib::BitVector<N> &lhs, std::size_t rhs
 template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2) * 2> mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
+    constexpr std::size_t max = std::max(N1, N2);
     std::size_t it = 0;
-    bvlib::BitVector<std::max(N1, N2) * 2> result;
+    bvlib::BitVector<max * 2> result;
     // Perform the multiplication.
     if (lhs.count() < rhs.count()) {
-        bvlib::BitVector<std::max(N1, N2) * 2> _rhs(rhs);
+        bvlib::BitVector<max * 2> _rhs(rhs);
         for (; it < N1; ++it)
             if (lhs[it])
                 result += bvlib::shift_left(_rhs, it);
     } else {
-        bvlib::BitVector<std::max(N1, N2) * 2> _lhs(lhs);
+        bvlib::BitVector<max * 2> _lhs(lhs);
         for (; it < N2; ++it)
             if (rhs[it])
                 result += bvlib::shift_left(_lhs, it);
@@ -623,7 +688,8 @@ inline bvlib::BitVector<N * 2> operator*(T lhs, bvlib::BitVector<N> const &rhs)
 template <std::size_t N1, std::size_t N2>
 inline std::pair<bvlib::BitVector<std::max(N1, N2)>, bvlib::BitVector<std::max(N1, N2)>> div(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
-    bvlib::BitVector<std::max(N1, N2)> qotient, remainder, support;
+    constexpr std::size_t max = std::max(N1, N2);
+    bvlib::BitVector<max> qotient, remainder, support;
     if (rhs.none())
         throw std::domain_error("division by zero undefined");
     if (lhs.none())
@@ -638,10 +704,10 @@ inline std::pair<bvlib::BitVector<std::max(N1, N2)>, bvlib::BitVector<std::max(N
     remainder = lhs;
     support   = rhs;
     // Count significant digits in lhs and rhs and dividend.
-    auto sig_lhs = most_significant_bit(lhs);
-    auto sig_rhs = most_significant_bit(rhs);
+    std::size_t sig_lhs = most_significant_bit(lhs);
+    std::size_t sig_rhs = most_significant_bit(rhs);
     // Align the y with the dividend.
-    auto n = (sig_lhs - sig_rhs);
+    std::size_t n = (sig_lhs - sig_rhs);
     support <<= n;
     // Make sure the loop executes the right number of times.
     n += 1;

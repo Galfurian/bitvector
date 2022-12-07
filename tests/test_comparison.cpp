@@ -1,8 +1,7 @@
-
 #include "bvlib/bitvector.hpp"
 #include "bvlib/math.hpp"
+#include "bvlib/io.hpp"
 
-#include <iostream>
 #include <iomanip>
 #include <vector>
 #include <random>
@@ -33,52 +32,6 @@ int test_operators()
         inputs2[i] = test_bv_pair_t<N2>(distr(gen));
     }
 
-    for (std::size_t i = 0; i < QT; ++i) {
-        for (std::size_t j = 0; j < QT; ++j) {
-            auto bv_result = inputs1[i].bitvector + inputs2[j].bitvector;
-            auto nm_result = inputs1[i].original + inputs2[j].original;
-            if (bv_result != nm_result) {
-                std::cerr << inputs1[i].bitvector << " + " << inputs2[j].bitvector << " = " << bv_result << " (" << N1 << "&" << N2 << " bits)!= \n";
-                std::cerr << inputs1[i].original << " + " << inputs2[j].original << " = " << nm_result << "\n\n";
-                return 1;
-            }
-        }
-    }
-    for (std::size_t i = 0; i < QT; ++i) {
-        for (std::size_t j = 0; j < QT; ++j) {
-            if (inputs1[i].original < inputs2[j].original)
-                continue;
-            auto bv_result = inputs1[i].bitvector - inputs2[j].bitvector;
-            auto nm_result = inputs1[i].original - inputs2[j].original;
-            if (bv_result != nm_result) {
-                std::cerr << inputs1[i].bitvector << " - " << inputs2[j].bitvector << " = " << bv_result << " (" << N1 << "&" << N2 << " bits)!= \n";
-                std::cerr << inputs1[i].original << " - " << inputs2[j].original << " = " << nm_result << "\n\n";
-                return 1;
-            }
-        }
-    }
-    for (std::size_t i = 0; i < QT; ++i) {
-        for (std::size_t j = 0; j < QT; ++j) {
-            auto bv_result = inputs1[i].bitvector * inputs2[j].bitvector;
-            auto nm_result = inputs1[i].original * inputs2[j].original;
-            if (bv_result != nm_result) {
-                std::cerr << inputs1[i].bitvector << " * " << inputs2[j].bitvector << " = " << bv_result << " (" << N1 << "&" << N2 << " bits) != \n";
-                std::cerr << inputs1[i].original << " * " << inputs2[j].original << " = " << nm_result << "\n\n";
-                return 1;
-            }
-        }
-    }
-    for (std::size_t i = 0; i < QT; ++i) {
-        for (std::size_t j = 0; j < QT; ++j) {
-            auto bv_result = inputs1[i].bitvector / inputs2[j].bitvector;
-            auto nm_result = inputs1[i].original / inputs2[j].original;
-            if (bv_result != nm_result) {
-                std::cerr << inputs1[i].bitvector << " / " << inputs2[j].bitvector << " = " << bv_result << " (" << N1 << "&" << N2 << " bits)!= \n";
-                std::cerr << inputs1[i].original << " / " << inputs2[j].original << " = " << nm_result << "\n\n";
-                return 1;
-            }
-        }
-    }
     for (std::size_t i = 0; i < QT; ++i) {
         for (std::size_t j = 0; j < QT; ++j) {
             auto bv_result = inputs1[i].bitvector < inputs2[j].bitvector;
@@ -150,11 +103,6 @@ int test_operators()
 
 int main(int, char *[])
 {
-    bvlib::BitVector<8> a(8);
-    std::cout << a.to_string() << "\n";
-    a = bvlib::shift_left(a, 9);
-    std::cout << a.to_string() << "\n";
-
     if (test_operators<8, 4, 256>())
         return 1;
     if (test_operators<16, 8, 256>())
