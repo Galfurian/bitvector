@@ -1,70 +1,121 @@
 # -----------------------------------------------------------------------------
 # @brief  : Root cmake file.
 # @author : Enrico Fraccaroli
-# @create : 23/03/2021
-# @update : 05/06/2022
-# -----------------------------------------------------------------------------
-
 # -----------------------------------------------------------------------------
 # Set the minimum CMake version, the project name and default build type.
-# -----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.1...3.18)
 
 # Set the project name.
 project(bvlib CXX)
 
-# Set C++ Standard.
-set(CMAKE_CXX_STANDARD 17)
+# Set the default build type to Debug.
+if(NOT CMAKE_BUILD_TYPE)
+    message(STATUS "Setting build type to 'Debug' as none was specified.")
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+endif()
 
 # -----------------------------------------------------------------------------
-# Add options.
+# OPTIONS
 # -----------------------------------------------------------------------------
-option(STRICT_WARNINGS "Enable strict compiler warnings" ON)
-option(WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
-option(BUILD_EXAMPLES "Build examples" OFF)
+
+option(BVLIB_BUILD_EXAMPLES "Build examples" OFF)
+option(BVLIB_BUILD_TESTS "Build tests" OFF)
+option(BVLIB_STRICT_WARNINGS "Enable strict compiler warnings" ON)
+option(BVLIB_WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
+
+# -----------------------------------------------------------------------------
+# COMPILATION FLAGS
+# -----------------------------------------------------------------------------
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Disable warnings that suggest using MSVC-specific safe functions
+    set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} -D_CRT_SECURE_NO_WARNINGS)
+
+    if(BVLIB_WARNINGS_AS_ERRORS)
+        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /WX)
+    endif(BVLIB_WARNINGS_AS_ERRORS)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(BVLIB_WARNINGS_AS_ERRORS)
+        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} -Werror)
+    endif(BVLIB_WARNINGS_AS_ERRORS)
+endif()
+
+if(BVLIB_STRICT_WARNINGS)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        # Mark system headers as external for MSVC explicitly
+        # https://devblogs.microsoft.com/cppblog/broken-warnings-theory
+        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /experimental:external)
+        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /external:I ${CMAKE_BINARY_DIR})
+        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /external:anglebrackets)
+        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /external:W0)
+        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /W4)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} -Wall -Wextra -Wconversion -pedantic)
+    endif()
+endif(BVLIB_STRICT_WARNINGS)
 
 # -----------------------------------------------------------------------------
 # LIBRARY
 # -----------------------------------------------------------------------------
+
 # Add the C++ Library.
 add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # Inlcude header directories and set the library.
 target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/include)
+# Set compilation flags.
+target_compile_options(${PROJECT_NAME} INTERFACE ${BVLIB_COMPILE_OPTIONS})
 
 # -----------------------------------------------------------------------------
-# Set the compilation flags.
+# EXAMPLES
 # -----------------------------------------------------------------------------
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    # Disable warnings that suggest using MSVC-specific safe functions
-    target_compile_definitions(${PROJECT_NAME} INTERFACE _CRT_SECURE_NO_WARNINGS)
-    if(WARNINGS_AS_ERRORS)
-        target_compile_options(${PROJECT_NAME} INTERFACE /WX)
-    endif()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    if(WARNINGS_AS_ERRORS)
-        target_compile_options(${PROJECT_NAME} INTERFACE -Werror)
-    endif()
+
+if(BVLIB_BUILD_EXAMPLES)
+    # Add the example.
+    add_executable(${PROJECT_NAME}_example examples/example.cpp)
+    # Liking for the test.
+    target_link_libraries(${PROJECT_NAME}_example PUBLIC bvlib)
+    # Set compilation flags.
+    target_compile_options(${PROJECT_NAME}_example PUBLIC ${BVLIB_COMPILE_OPTIONS})
 endif()
 
-if(STRICT_WARNINGS)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        # Mark system headers as external for MSVC explicitly
-        # https://devblogs.microsoft.com/cppblog/broken-warnings-theory
-        target_compile_options(${PROJECT_NAME} INTERFACE /experimental:external)
-        target_compile_options(${PROJECT_NAME} INTERFACE /external:I ${CMAKE_BINARY_DIR})
-        target_compile_options(${PROJECT_NAME} INTERFACE /external:anglebrackets)
-        target_compile_options(${PROJECT_NAME} INTERFACE /external:W0)
+# -----------------------------------------------------------------------------
+# TESTS
+# -----------------------------------------------------------------------------
 
-        target_compile_options(${PROJECT_NAME} INTERFACE /W4)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Wextra -Wconversion -pedantic)
-    endif()
+if(BVLIB_BUILD_TESTS)
+    # CMake has support for adding tests to a project.
+    enable_testing()
+
+    # -------------------------------------
+    # TEST 1
+    # -------------------------------------
+    # Add the test.
+    add_executable(${PROJECT_NAME}_test_operators tests/test_operators.cpp)
+    # Liking for the test.
+    target_link_libraries(${PROJECT_NAME}_test_operators bvlib)
+    # Set compilation flags.
+    target_compile_options(${PROJECT_NAME}_test_operators PUBLIC ${BVLIB_COMPILE_OPTIONS})
+    # Add the test.
+    add_test(${PROJECT_NAME}_test_operators_run ${PROJECT_NAME}_test_operators)
+
+    # -------------------------------------
+    # TEST 2
+    # -------------------------------------
+    # Add the test.
+    add_executable(${PROJECT_NAME}_test_comparison tests/test_comparison.cpp)
+    # Liking for the test.
+    target_link_libraries(${PROJECT_NAME}_test_comparison bvlib)
+    # Set compilation flags.
+    target_compile_options(${PROJECT_NAME}_test_comparison PUBLIC ${BVLIB_COMPILE_OPTIONS})
+    # Add the test.
+    add_test(${PROJECT_NAME}_test_comparison_run ${PROJECT_NAME}_test_comparison)
 endif()
 
 # -----------------------------------------------------------------------------
 # DOCUMENTATION
 # -----------------------------------------------------------------------------
+
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
     # Doxygen theme
@@ -92,23 +143,8 @@ if(DOXYGEN_FOUND)
     )
 
     doxygen_add_docs(${PROJECT_NAME}_documentation
-        include/bvlib/bitvector.hpp
-        include/bvlib/math.hpp
-        README.md
+        ${PROJECT_SOURCE_DIR}/include/bvlib/bitvector.hpp
+        ${PROJECT_SOURCE_DIR}/include/bvlib/math.hpp
+        ${PROJECT_SOURCE_DIR}/README.md
     )
 endif()
-
-# -----------------------------------------------------------------------------
-# Examples
-# -----------------------------------------------------------------------------
-if(BUILD_EXAMPLES)
-    add_subdirectory(examples)
-endif()
-
-# -----------------------------------------------------------------------------
-# Add tests.
-# -----------------------------------------------------------------------------
-# CMake has support for adding tests to a project:
-enable_testing()
-# Add the subdirectory containing the tests (which imports also their target).
-add_subdirectory(tests)
