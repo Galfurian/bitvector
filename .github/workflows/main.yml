@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Build
         run: |
-          cmake -B build -DBVLIB_BUILD_TESTS=ON -DWARNINGS_AS_ERRORS=ON ${{ matrix.extra-cmake-arguments }}
+          cmake -B build -DBVLIB_BUILD_TESTS=ON -DBVLIB_WARNINGS_AS_ERRORS=ON ${{ matrix.extra-cmake-arguments }}
           cmake --build build --parallel 2
       - name: Test
         run: ctest -C Debug --test-dir build --no-tests=error --verbose
