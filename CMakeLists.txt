@@ -71,12 +71,16 @@ target_compile_options(${PROJECT_NAME} INTERFACE ${BVLIB_COMPILE_OPTIONS})
 # -----------------------------------------------------------------------------
 
 if(BVLIB_BUILD_EXAMPLES)
+
     # Add the example.
     add_executable(${PROJECT_NAME}_example examples/example.cpp)
-    # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_example PUBLIC bvlib)
     # Set compilation flags.
     target_compile_options(${PROJECT_NAME}_example PUBLIC ${BVLIB_COMPILE_OPTIONS})
+    # Inlcude header directories.
+    target_include_directories(${PROJECT_NAME}_example PUBLIC ${PROJECT_SOURCE_DIR}/include)
+    # Set the linked libraries.
+    target_link_libraries(${PROJECT_NAME}_example PUBLIC bvlib)
+    
 endif()
 
 # -----------------------------------------------------------------------------
@@ -84,6 +88,7 @@ endif()
 # -----------------------------------------------------------------------------
 
 if(BVLIB_BUILD_TESTS)
+
     # CMake has support for adding tests to a project.
     enable_testing()
 
@@ -91,11 +96,13 @@ if(BVLIB_BUILD_TESTS)
     # TEST 1
     # -------------------------------------
     # Add the test.
-    add_executable(${PROJECT_NAME}_test_operators tests/test_operators.cpp)
-    # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_test_operators bvlib)
+    add_executable(${PROJECT_NAME}_test_operators ${PROJECT_SOURCE_DIR}/tests/test_operators.cpp)
     # Set compilation flags.
     target_compile_options(${PROJECT_NAME}_test_operators PUBLIC ${BVLIB_COMPILE_OPTIONS})
+    # Inlcude header directories.
+    target_include_directories(${PROJECT_NAME}_test_operators PUBLIC ${PROJECT_SOURCE_DIR}/include)
+    # Liking for the test.
+    target_link_libraries(${PROJECT_NAME}_test_operators bvlib)
     # Add the test.
     add_test(${PROJECT_NAME}_test_operators_run ${PROJECT_NAME}_test_operators)
 
@@ -104,12 +111,15 @@ if(BVLIB_BUILD_TESTS)
     # -------------------------------------
     # Add the test.
     add_executable(${PROJECT_NAME}_test_comparison tests/test_comparison.cpp)
-    # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_test_comparison bvlib)
     # Set compilation flags.
     target_compile_options(${PROJECT_NAME}_test_comparison PUBLIC ${BVLIB_COMPILE_OPTIONS})
+    # Inlcude header directories.
+    target_include_directories(${PROJECT_NAME}_test_comparison PUBLIC ${PROJECT_SOURCE_DIR}/include)
+    # Liking for the test.
+    target_link_libraries(${PROJECT_NAME}_test_comparison bvlib)
     # Add the test.
     add_test(${PROJECT_NAME}_test_comparison_run ${PROJECT_NAME}_test_comparison)
+    
 endif()
 
 # -----------------------------------------------------------------------------
@@ -117,22 +127,37 @@ endif()
 # -----------------------------------------------------------------------------
 
 find_package(Doxygen)
-if(DOXYGEN_FOUND)
-    # Doxygen theme
-    include(FetchContent)
 
+if(DOXYGEN_FOUND)
+    
     message(STATUS "Retrieving `doxygen-awesome-css`...")
+
+    # = RETIVAL ===============================================================
+    # Include fetch content.
+    include(FetchContent)
+    # Record the options that describe how to populate the specified content.
     FetchContent_Declare(
         doxygenawesome
         GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
         GIT_TAG 4cd62308d825fe0396d2f66ffbab45d0e247724c # 2.0.3
     )
+    # Retrieve the properties related to the content.
     FetchContent_GetProperties(doxygenawesome)
+    # If not populated, make the content available.
     if(NOT doxygenawesome_POPULATED)
+        # Ensures the named dependencies have been populated.
         FetchContent_MakeAvailable(doxygenawesome)
+        # Hide fetchcontent variables, otherwise with ccmake it's a mess.
+        mark_as_advanced(FORCE
+            FETCHCONTENT_QUIET FETCHCONTENT_BASE_DIR FETCHCONTENT_FULLY_DISCONNECTED FETCHCONTENT_UPDATES_DISCONNECTED
+            FETCHCONTENT_UPDATES_DISCONNECTED_DOXYGENAWESOME FETCHCONTENT_SOURCE_DIR_DOXYGENAWESOME
+        )
     endif()
 
+    # = CUSTOMIZATION =========================================================
+    set(DOXYGEN_PROJECT_NAME "Bitvector")
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+    set(DOXYGEN_SHOW_INCLUDE_FILES NO)
     set(DOXYGEN_GENERATE_TREEVIEW YES)
     set(DOXYGEN_HTML_HEADER ${doxygenawesome_SOURCE_DIR}/doxygen-custom/header.html)
     set(DOXYGEN_HTML_EXTRA_STYLESHEET ${doxygenawesome_SOURCE_DIR}/doxygen-awesome.css)
@@ -141,10 +166,10 @@ if(DOXYGEN_FOUND)
         ${doxygenawesome_SOURCE_DIR}/doxygen-awesome-paragraph-link.js
         ${doxygenawesome_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js
     )
-
-    doxygen_add_docs(${PROJECT_NAME}_documentation
+    doxygen_add_docs(
+        ${PROJECT_NAME}_documentation
+        ${PROJECT_SOURCE_DIR}/README.md
         ${PROJECT_SOURCE_DIR}/include/bvlib/bitvector.hpp
         ${PROJECT_SOURCE_DIR}/include/bvlib/math.hpp
-        ${PROJECT_SOURCE_DIR}/README.md
     )
 endif()
