@@ -264,9 +264,11 @@ public:
     constexpr inline T to_number() const
     {
         T result = 0;
-        for (long it = N - 1; it >= 0; --it)
-            if (bits[it])
+        for (std::size_t it = 0; it < N; ++it) {
+            if (bits[it]) {
                 result += static_cast<T>(std::pow(2, N - it - 1));
+            }
+        }
         return result;
     }
 };

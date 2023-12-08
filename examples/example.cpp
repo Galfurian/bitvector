@@ -8,9 +8,12 @@
 
 int main(int, char *[])
 {
-    bvlib::BitVector<8> a(8);
-    std::cout << a << "\n";
-    a = bvlib::shift_left(a, 9);
-    std::cout << a << "\n";
+    bvlib::BitVector<6> a(0);
+    for (std::size_t i = 0; i <= 0xF; ++i) {
+        std::cout << a.to_string() << " : ";
+        std::cout << a.to_number<int>() << ":";
+        std::cout << bvlib::most_significant_bit(a) << "\n";
+        a++;
+    }
     return 0;
 }

@@ -15,44 +15,34 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # -----------------------------------------------------------------------------
+# ENABLE FETCH CONTENT
+# -----------------------------------------------------------------------------
+
+# We need this in order to import external projects.
+include(FetchContent)
+# Hide fetchcontent variables.
+mark_as_advanced(FORCE
+    FETCHCONTENT_QUIET
+    FETCHCONTENT_BASE_DIR
+    FETCHCONTENT_FULLY_DISCONNECTED
+    FETCHCONTENT_UPDATES_DISCONNECTED
+)
+
+# -----------------------------------------------------------------------------
 # OPTIONS
 # -----------------------------------------------------------------------------
 
-option(BVLIB_BUILD_EXAMPLES "Build examples" OFF)
-option(BVLIB_BUILD_TESTS "Build tests" OFF)
-option(BVLIB_STRICT_WARNINGS "Enable strict compiler warnings" ON)
-option(BVLIB_WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
+option(STRICT_WARNINGS "Enable strict compiler warnings" ON)
+option(WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
+option(BUILD_EXAMPLES "Build examples" OFF)
+option(BUILD_TESTS "Build tests" OFF)
 
 # -----------------------------------------------------------------------------
-# COMPILATION FLAGS
+# DEPENDENCIES
 # -----------------------------------------------------------------------------
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    # Disable warnings that suggest using MSVC-specific safe functions
-    set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} -D_CRT_SECURE_NO_WARNINGS)
-
-    if(BVLIB_WARNINGS_AS_ERRORS)
-        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /WX)
-    endif(BVLIB_WARNINGS_AS_ERRORS)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    if(BVLIB_WARNINGS_AS_ERRORS)
-        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} -Werror)
-    endif(BVLIB_WARNINGS_AS_ERRORS)
-endif()
-
-if(BVLIB_STRICT_WARNINGS)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        # Mark system headers as external for MSVC explicitly
-        # https://devblogs.microsoft.com/cppblog/broken-warnings-theory
-        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /experimental:external)
-        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /external:I ${CMAKE_BINARY_DIR})
-        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /external:anglebrackets)
-        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /external:W0)
-        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} /W4)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(BVLIB_COMPILE_OPTIONS ${BVLIB_COMPILE_OPTIONS} -Wall -Wextra -Wconversion -pedantic)
-    endif()
-endif(BVLIB_STRICT_WARNINGS)
+# We want doxygen for the documentation.
+find_package(Doxygen)
 
 # -----------------------------------------------------------------------------
 # LIBRARY
@@ -63,23 +53,51 @@ add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # Inlcude header directories and set the library.
 target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/include)
-# Set compilation flags.
-target_compile_options(${PROJECT_NAME} INTERFACE ${BVLIB_COMPILE_OPTIONS})
+# Enalbe C++17.
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
+
+# -----------------------------------------------------------------------------
+# Set the compilation flags.
+# -----------------------------------------------------------------------------
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Disable warnings that suggest using MSVC-specific safe functions
+    target_compile_definitions(${PROJECT_NAME} INTERFACE _CRT_SECURE_NO_WARNINGS)
+
+    if(WARNINGS_AS_ERRORS)
+        target_compile_options(${PROJECT_NAME} INTERFACE /WX)
+    endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(WARNINGS_AS_ERRORS)
+        target_compile_options(${PROJECT_NAME} INTERFACE -Werror)
+    endif()
+endif()
+
+if(STRICT_WARNINGS)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        # Mark system headers as external for MSVC explicitly
+        # https://devblogs.microsoft.com/cppblog/broken-warnings-theory
+        target_compile_options(${PROJECT_NAME} INTERFACE /experimental:external)
+        target_compile_options(${PROJECT_NAME} INTERFACE /external:I ${CMAKE_BINARY_DIR})
+        target_compile_options(${PROJECT_NAME} INTERFACE /external:anglebrackets)
+        target_compile_options(${PROJECT_NAME} INTERFACE /external:W0)
+
+        target_compile_options(${PROJECT_NAME} INTERFACE /W4)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Wextra -Wconversion -pedantic)
+    endif()
+endif()
 
 # -----------------------------------------------------------------------------
 # EXAMPLES
 # -----------------------------------------------------------------------------
 
-if(BVLIB_BUILD_EXAMPLES)
+if(BUILD_EXAMPLES)
 
     # Add the example.
     add_executable(${PROJECT_NAME}_example examples/example.cpp)
-    # Set compilation flags.
-    target_compile_options(${PROJECT_NAME}_example PUBLIC ${BVLIB_COMPILE_OPTIONS})
-    # Inlcude header directories.
-    target_include_directories(${PROJECT_NAME}_example PUBLIC ${PROJECT_SOURCE_DIR}/include)
     # Set the linked libraries.
-    target_link_libraries(${PROJECT_NAME}_example PUBLIC bvlib)
+    target_link_libraries(${PROJECT_NAME}_example PUBLIC ${PROJECT_NAME})
     
 endif()
 
@@ -87,36 +105,22 @@ endif()
 # TESTS
 # -----------------------------------------------------------------------------
 
-if(BVLIB_BUILD_TESTS)
+if(BUILD_TESTS)
 
     # CMake has support for adding tests to a project.
     enable_testing()
 
-    # -------------------------------------
-    # TEST 1
-    # -------------------------------------
     # Add the test.
     add_executable(${PROJECT_NAME}_test_operators ${PROJECT_SOURCE_DIR}/tests/test_operators.cpp)
-    # Set compilation flags.
-    target_compile_options(${PROJECT_NAME}_test_operators PUBLIC ${BVLIB_COMPILE_OPTIONS})
-    # Inlcude header directories.
-    target_include_directories(${PROJECT_NAME}_test_operators PUBLIC ${PROJECT_SOURCE_DIR}/include)
     # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_test_operators bvlib)
+    target_link_libraries(${PROJECT_NAME}_test_operators ${PROJECT_NAME})
     # Add the test.
     add_test(${PROJECT_NAME}_test_operators_run ${PROJECT_NAME}_test_operators)
 
-    # -------------------------------------
-    # TEST 2
-    # -------------------------------------
     # Add the test.
     add_executable(${PROJECT_NAME}_test_comparison tests/test_comparison.cpp)
-    # Set compilation flags.
-    target_compile_options(${PROJECT_NAME}_test_comparison PUBLIC ${BVLIB_COMPILE_OPTIONS})
-    # Inlcude header directories.
-    target_include_directories(${PROJECT_NAME}_test_comparison PUBLIC ${PROJECT_SOURCE_DIR}/include)
     # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_test_comparison bvlib)
+    target_link_libraries(${PROJECT_NAME}_test_comparison ${PROJECT_NAME})
     # Add the test.
     add_test(${PROJECT_NAME}_test_comparison_run ${PROJECT_NAME}_test_comparison)
     
@@ -126,15 +130,8 @@ endif()
 # DOCUMENTATION
 # -----------------------------------------------------------------------------
 
-find_package(Doxygen)
-
 if(DOXYGEN_FOUND)
     
-    message(STATUS "Retrieving `doxygen-awesome-css`...")
-
-    # = RETIVAL ===============================================================
-    # Include fetch content.
-    include(FetchContent)
     # Record the options that describe how to populate the specified content.
     FetchContent_Declare(
         doxygenawesome
@@ -145,6 +142,7 @@ if(DOXYGEN_FOUND)
     FetchContent_GetProperties(doxygenawesome)
     # If not populated, make the content available.
     if(NOT doxygenawesome_POPULATED)
+        message(STATUS "Retrieving `doxygen-awesome-css`...")
         # Ensures the named dependencies have been populated.
         FetchContent_MakeAvailable(doxygenawesome)
         # Hide fetchcontent variables, otherwise with ccmake it's a mess.
@@ -155,7 +153,7 @@ if(DOXYGEN_FOUND)
     endif()
 
     # = CUSTOMIZATION =========================================================
-    set(DOXYGEN_PROJECT_NAME "Bitvector")
+    set(DOXYGEN_PROJECT_NAME "Bitvector Library")
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
     set(DOXYGEN_SHOW_INCLUDE_FILES NO)
     set(DOXYGEN_GENERATE_TREEVIEW YES)
@@ -171,5 +169,6 @@ if(DOXYGEN_FOUND)
         ${PROJECT_SOURCE_DIR}/README.md
         ${PROJECT_SOURCE_DIR}/include/bvlib/bitvector.hpp
         ${PROJECT_SOURCE_DIR}/include/bvlib/math.hpp
+        ${PROJECT_SOURCE_DIR}/include/bvlib/io.hpp
     )
 endif()

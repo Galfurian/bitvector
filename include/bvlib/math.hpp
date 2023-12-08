@@ -45,9 +45,11 @@ inline bool sub_bits(bool b1, bool b2, bool &borrow)
 template <std::size_t N>
 inline std::size_t most_significant_bit(const bvlib::BitVector<N> &bitvector)
 {
-    for (long i = N - 1; i >= 0; i--)
-        if (bitvector[i])
+    for (std::size_t i = N - 1; i > 0; i--) {
+        if (bitvector[i]) {
             return i;
+        }
+    }
     return std::size_t(0);
 }
 
@@ -541,6 +543,34 @@ inline bvlib::BitVector<N> &operator+=(bvlib::BitVector<N> &lhs, std::size_t rhs
     return (lhs += BitVector<N>(rhs));
 }
 
+/// @brief Increments the bitvector value.
+/// @param lhs the bitvector.
+/// @return the bitvector incremented.
+template <std::size_t N>
+inline bvlib::BitVector<N> &operator++(bvlib::BitVector<N> &lhs)
+{
+    static const BitVector<N> one(1);
+    bool carry = false;
+    for (std::size_t it = 0; it < N; ++it) {
+        lhs[it] = add_bits(lhs[it], one[it], carry);
+    }
+    return lhs;
+}
+
+/// @brief Increments the bitvector value.
+/// @param lhs the bitvector.
+/// @return the bitvector incremented.
+template <std::size_t N>
+inline bvlib::BitVector<N> &operator++(bvlib::BitVector<N> &lhs, int)
+{
+    static const BitVector<N> one(1);
+    bool carry = false;
+    for (std::size_t it = 0; it < N; ++it) {
+        lhs[it] = add_bits(lhs[it], one[it], carry);
+    }
+    return lhs;
+}
+
 // ============================================================================
 // SUB
 // ============================================================================
@@ -627,7 +657,7 @@ template <std::size_t N1, std::size_t N2>
 inline bvlib::BitVector<std::max(N1, N2) * 2> mul(bvlib::BitVector<N1> const &lhs, bvlib::BitVector<N2> const &rhs)
 {
     constexpr std::size_t max = std::max(N1, N2);
-    std::size_t it = 0;
+    std::size_t it            = 0;
     bvlib::BitVector<max * 2> result;
     // Perform the multiplication.
     if (lhs.count() < rhs.count()) {
