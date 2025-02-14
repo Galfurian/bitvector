@@ -8,6 +8,7 @@
 #include <climits>
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <stdexcept>
 #include <string>
 
@@ -27,7 +28,7 @@ namespace detail
 /// @param x The integer.
 /// @return The number of set bits.
 template <typename T>
-inline std::size_t popcount(T x)
+inline auto popcount(T x) -> std::size_t
 {
     std::size_t count = 0;
     while (x) {
@@ -41,7 +42,7 @@ inline std::size_t popcount(T x)
 /// @param x The input number.
 /// @return The number of leading zeros.
 template <typename T>
-inline std::size_t count_leading_zeros(T x)
+inline auto count_leading_zeros(T x) -> std::size_t
 {
     // Special case: all bits are zero.
     if (x == 0) {
@@ -71,7 +72,7 @@ class BitReference
 {
 private:
     /// @brief The block containing the bit being referenced.
-    BlockType &_block;
+    std::reference_wrapper<BlockType> _block;
     /// @brief The position of the bit within the block.
     std::size_t _pos;
 
@@ -105,7 +106,7 @@ public:
     ///
     /// @param value The value to assign to the referenced bit (`true` to set, `false` to clear).
     /// @return A reference to the current `BitReference` to allow chaining assignments.
-    BitReference &operator=(bool value)
+    auto operator=(bool value) -> BitReference &
     {
         if (value) {
             _block |= (BlockType(1) << _pos); ///< Set the bit to 1.
@@ -203,11 +204,23 @@ public:
         }
     }
 
+    // Copy constructor
+    BitVector(const BitVector &other) = default;
+
+    // Copy assignment operator
+    auto operator=(const BitVector &other) -> BitVector & = default;
+
+    // Move constructor
+    BitVector(BitVector &&other) noexcept = default;
+
+    // Move assignment operator
+    auto operator=(BitVector &&other) noexcept -> BitVector & = default;
+
     virtual ~BitVector() = default;
 
     /// @brief Returns a bitvector of all ones.
     /// @return A bitvector of all 1s.
-    static inline BitVector<N> ones()
+    static auto ones() -> BitVector<N>
     {
         BitVector<N> result;
         result.data.fill(~BlockType(0)); // Set all bits to 1
@@ -217,11 +230,11 @@ public:
 
     /// @brief Returns a bitvector of all zeros.
     /// @return A bitvector of all 0s.
-    static inline BitVector<N> zeros() { return BitVector<N>(); }
+    static auto zeros() -> BitVector<N> { return BitVector<N>(); }
 
     /// @brief Sets all bits to 1.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &set()
+    auto set() -> BitVector<N> &
     {
         // Set all bits in each block.
         data.fill(~BlockType(0));
@@ -233,7 +246,7 @@ public:
     /// @brief Sets a bit at a given position.
     /// @param pos The position to set.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &set(std::size_t pos)
+    auto set(std::size_t pos) -> BitVector<N> &
     {
         if (pos >= N) {
             throw std::out_of_range("Bit position out of range");
@@ -244,7 +257,7 @@ public:
 
     /// @brief Sets every bit to false.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &reset()
+    auto reset() -> BitVector<N> &
     {
         // Set each block to all zeros.
         data.fill(0);
@@ -254,7 +267,7 @@ public:
     /// @brief Sets the given bit to false.
     /// @param pos The position to reset.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &reset(std::size_t pos)
+    auto reset(std::size_t pos) -> BitVector<N> &
     {
         if (pos >= N) {
             throw std::out_of_range("Bit position out of range");
@@ -267,7 +280,7 @@ public:
     /// @brief Sets or clears the sign bit (MSB).
     /// @param value `true` to set the sign bit (negative), `false` to clear it (positive).
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &set_sign(bool value)
+    auto set_sign(bool value) -> BitVector<N> &
     {
         // Set MSB to 1 (negative).
         if (value) {
@@ -280,7 +293,7 @@ public:
     /// @brief Toggles a bit at a given position.
     /// @param pos The position to toggle.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &toggle(std::size_t pos)
+    auto toggle(std::size_t pos) -> BitVector<N> &
     {
         if (pos >= N) {
             throw std::out_of_range("BitVector index out of range");
@@ -292,7 +305,7 @@ public:
     /// @brief Gets the value of a bit at a given position.
     /// @param pos The position to check.
     /// @return true if the bit is set, false otherwise.
-    bool get(std::size_t pos) const
+    auto get(std::size_t pos) const -> bool
     {
         if (pos >= N) {
             throw std::out_of_range("BitVector index out of range");
@@ -302,7 +315,7 @@ public:
 
     /// @brief Flips every bit.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &flip()
+    auto flip() -> BitVector<N> &
     {
         for (auto &block : data) {
             block = ~block;
@@ -314,7 +327,7 @@ public:
     /// @brief Flips a given bit.
     /// @param pos The position to flip.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &flip(std::size_t pos)
+    auto flip(std::size_t pos) -> BitVector<N> &
     {
         if (pos >= N) {
             throw std::out_of_range("BitVector index out of range");
@@ -325,9 +338,9 @@ public:
 
     /// @brief Trims extra bits beyond N (in the last block).
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &trim()
+    auto trim() -> BitVector<N> &
     {
-        constexpr std::size_t extraBits = NumBlocks * BitsPerBlock - N;
+        constexpr std::size_t extraBits = (NumBlocks * BitsPerBlock) - N;
         // Ensure no invalid shifts.
         if constexpr (extraBits > 0 && NumBlocks > 0) {
             constexpr BlockType mask = (BlockType(1) << (BitsPerBlock - extraBits)) - 1;
@@ -338,11 +351,11 @@ public:
 
     /// @brief Returns the size of the bit-vector.
     /// @return the size of the bitvector.
-    inline constexpr std::size_t size() const noexcept { return N; }
+    constexpr auto size() const noexcept -> std::size_t { return N; }
 
     /// @brief Returns the number of bits which are set.
     /// @return the number of bits which are set.
-    inline std::size_t count() const
+    auto count() const -> std::size_t
     {
         std::size_t result = 0;
         for (const auto &block : data) {
@@ -353,7 +366,7 @@ public:
 
     /// @brief Tests whether all the bits in the BitVector are set to 1.
     /// @return `true` if all bits are 1, otherwise `false`.
-    inline bool all() const
+    auto all() const -> bool
     {
         // Check all blocks except the last one.
         for (std::size_t i = 0; i < NumBlocks - 1; ++i) {
@@ -362,7 +375,7 @@ public:
             }
         }
         // For the last block, handle excess bits.
-        const std::size_t extraBits = NumBlocks * BitsPerBlock - N;
+        const std::size_t extraBits = (NumBlocks * BitsPerBlock) - N;
         if (extraBits == 0 || (data[NumBlocks - 1] == ~BlockType(0))) {
             return true;
         }
@@ -374,7 +387,7 @@ public:
 
     /// @brief Tests whether any bit in the BitVector is set to 1.
     /// @return `true` if at least one bit is set to 1, otherwise `false`.
-    inline bool any() const
+    auto any() const -> bool
     {
         for (const auto &block : data) {
             if (block != 0) {
@@ -386,11 +399,11 @@ public:
 
     /// @brief Tests whether all the bits in the BitVector are set to 0.
     /// @return `true` if all bits are set to 0, otherwise `false`.
-    inline bool none() const { return !any(); }
+    auto none() const -> bool { return !any(); }
 
     /// @brief Returns the sign bit (MSB).
     /// @return `true` if the sign bit is 1 (negative in two's complement), `false` otherwise.
-    inline bool sign() const
+    auto sign() const -> bool
     {
         // Check the most significant bit (MSB).
         return get(N - 1);
@@ -398,7 +411,7 @@ public:
 
     /// @brief Performs two's complement (bitwise negation + manual addition).
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &two_complement()
+    auto two_complement() -> BitVector<N> &
     {
         flip(); // Invert all bits (bitwise negation)
 
@@ -425,22 +438,26 @@ public:
     /// @param lhs The position of the first bit to swap.
     /// @param rhs The position of the second bit to swap.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &swap(std::size_t lhs, std::size_t rhs)
+    auto swap(std::size_t lhs, std::size_t rhs) noexcept -> BitVector<N> &
     {
-        if (lhs >= N || rhs >= N) {
-            throw std::out_of_range("Bit position out of range");
-        }
-        bool bit_lhs = get(lhs);
-        bool bit_rhs = get(rhs);
-        // Swap the bits if they differ
-        if (bit_lhs != bit_rhs) {
-            if (bit_lhs) {
-                set(rhs);   // Set the rhs bit to 1
-                reset(lhs); // Reset the lhs bit to 0
-            } else {
-                set(lhs);   // Set the lhs bit to 1
-                reset(rhs); // Reset the rhs bit to 0
+        try {
+            if ((lhs >= N) || (rhs >= N)) {
+                throw std::out_of_range("BitVector index out of range");
             }
+            bool bit_lhs = get(lhs);
+            bool bit_rhs = get(rhs);
+            // Swap the bits if they differ.
+            if (bit_lhs != bit_rhs) {
+                if (bit_lhs) {
+                    set(rhs);   // Set the rhs bit to 1.
+                    reset(lhs); // Reset the lhs bit to 0.
+                } else {
+                    set(lhs);   // Set the lhs bit to 1.
+                    reset(rhs); // Reset the rhs bit to 0.
+                }
+            }
+        } catch (const std::out_of_range &e) {
+            (void)e;
         }
         return *this;
     }
@@ -452,7 +469,7 @@ public:
     /// @param start The position of the first bit in the range to reverse.
     /// @param end The position of the last bit in the range to reverse.
     /// @return A reference to the modified BitVector.
-    BitVector<N> &swap_range(std::size_t start, std::size_t end)
+    auto swap_range(std::size_t start, std::size_t end) -> BitVector<N> &
     {
         while (start < end) {
             // Swap the bits at the start and end positions.
@@ -468,7 +485,7 @@ public:
     /// @param rhs The BitVector to copy from.
     /// @return A reference to the modified BitVector.
     template <std::size_t N2>
-    inline BitVector<N> &assign(const BitVector<N2> &rhs)
+    auto assign(const BitVector<N2> &rhs) -> BitVector<N> &
     {
         reset(); // Clear all bits before copying
         std::size_t min_size = std::min(N, N2);
@@ -485,7 +502,7 @@ public:
     /// @param rhs The BitVector to copy from.
     /// @return A reference to the modified BitVector.
     template <std::size_t N2>
-    inline BitVector<N> &rassign(const BitVector<N2> &rhs)
+    auto rassign(const BitVector<N2> &rhs) -> BitVector<N> &
     {
         reset(); // Clear all bits before copying
         std::size_t min_size = std::min(N, N2);
@@ -500,7 +517,7 @@ public:
     /// @brief Returns the bit at the given position.
     /// @param pos The bit position.
     /// @return True if the bit is set, false otherwise.
-    inline bool at(std::size_t pos) const
+    auto at(std::size_t pos) const -> bool
     {
         if (pos >= N) {
             throw std::out_of_range("Accessing values outside bitvector");
@@ -511,7 +528,7 @@ public:
     /// @brief Returns a modifiable reference-like proxy to a bit.
     /// @param pos The bit position.
     /// @return A BitReference object allowing modification of the bit.
-    inline detail::BitReference<BlockType> at(std::size_t pos)
+    auto at(std::size_t pos) -> detail::BitReference<BlockType>
     {
         if (pos >= N) {
             throw std::out_of_range("Accessing values outside bitvector");
@@ -524,7 +541,7 @@ public:
     /// @param rhs The BitVector to copy from.
     /// @return A reference to this BitVector (the destination).
     template <std::size_t N2>
-    inline BitVector<N> &operator=(const BitVector<N2> &rhs)
+    auto operator=(const BitVector<N2> &rhs) -> BitVector<N> &
     {
         // Clear all bits.
         reset();
@@ -540,7 +557,7 @@ public:
     /// @brief Copies the string into this BitVector (e.g., "1010111").
     /// @param str The input string.
     /// @return A reference to this BitVector (the destination).
-    inline BitVector<N> &operator=(const std::string &str)
+    auto operator=(const std::string &str) -> BitVector<N> &
     {
         // Clear all bits.
         reset();
@@ -559,13 +576,13 @@ public:
     /// @brief Transforms an integer `rhs` into a BitVector.
     /// @param rhs The integer to assign.
     /// @return A reference to the modified BitVector.
-    inline BitVector<N> &operator=(std::size_t rhs)
+    auto operator=(std::size_t rhs) -> BitVector<N> &
     {
         // Clear all bits.
         reset();
         for (std::size_t i = 0; i < N; ++i) {
             // Set bit if `rhs` has a 1 at position i.
-            if (rhs & 1) {
+            if ((rhs & 1U) != 0U) {
                 set(i);
             }
             // Move to the next bit.
@@ -577,18 +594,18 @@ public:
     /// @brief Returns the bit at the given position using array indexing.
     /// @param pos The bit position.
     /// @return True if the bit is set, false otherwise.
-    inline bool operator[](std::size_t pos) const { return at(pos); }
+    auto operator[](std::size_t pos) const -> bool { return at(pos); }
 
     /// @brief Returns a modifiable reference-like proxy to a bit using array indexing.
     /// @param pos The bit position.
     /// @return A BitReference object allowing modification of the bit.
-    inline detail::BitReference<BlockType> operator[](std::size_t pos) { return at(pos); }
+    auto operator[](std::size_t pos) -> detail::BitReference<BlockType> { return at(pos); }
 
     /// @brief Converts the BitVector to a signed or unsigned integer.
     /// @tparam T The target integer type.
     /// @return The integer representation of the BitVector.
     template <typename T = std::size_t>
-    constexpr inline T to_number() const
+    constexpr auto to_number() const -> T
     {
         static_assert(std::is_integral<T>::value, "T must be an integral type");
         T result = 0;
@@ -609,7 +626,7 @@ public:
 
     /// @brief Converts the BitVector to a string.
     /// @return The binary string representing the bitvector.
-    std::string to_string() const
+    auto to_string() const -> std::string
     {
         std::string str;
         for (std::size_t i = 0; i < N; ++i) {

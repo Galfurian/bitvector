@@ -6,7 +6,6 @@
 
 #include "bitvector.hpp"
 
-#include <iostream>
 #include <stdexcept>
 
 namespace bvlib
@@ -20,10 +19,10 @@ namespace detail
 /// @param b2 second bit.
 /// @param carry the carry from the operation.
 /// @return the sum of the two bits.
-inline bool add_bits(bool b1, bool b2, bool &carry)
+inline auto add_bits(bool b1, bool b2, bool &carry) -> bool
 {
     // Standard bitwise sum with carry.
-    bool sum = b1 ^ b2 ^ carry;
+    bool sum = (b1 ^ b2 ^ static_cast<int>(static_cast<int>(carry) != 0)) != 0;
     // Carry logic.
     carry    = (b1 && b2) || (b1 && carry) || (b2 && carry);
     return sum;
@@ -34,10 +33,10 @@ inline bool add_bits(bool b1, bool b2, bool &carry)
 /// @param b2 second bit.
 /// @param borrow the borrow from the operation.
 /// @return the difference between the two bits.
-inline bool sub_bits(bool b1, bool b2, bool &borrow)
+inline auto sub_bits(bool b1, bool b2, bool &borrow) -> bool
 {
     // Standard bitwise subtraction with borrow.
-    bool difference = b1 ^ b2 ^ borrow;
+    bool difference = (b1 ^ b2 ^ static_cast<int>(static_cast<int>(borrow) != 0)) != 0;
     // Borrow logic.
     borrow          = (!b1 && b2) || (borrow && (!b1 || b2));
     return difference;
@@ -49,7 +48,7 @@ inline bool sub_bits(bool b1, bool b2, bool &borrow)
 /// @param carry The carry from the previous operation.
 /// @return A reference to the first block.
 template <typename BlockType>
-inline BlockType &add_block_inplace(BlockType &lhs_block, BlockType rhs_block, bool &carry)
+inline auto add_block_inplace(BlockType &lhs_block, BlockType rhs_block, bool &carry) -> BlockType &
 {
     // Add the rhs block and the carry to the lhs block directly.
     lhs_block += rhs_block + carry;
@@ -65,7 +64,7 @@ inline BlockType &add_block_inplace(BlockType &lhs_block, BlockType rhs_block, b
 /// @param carry The carry from the previous operation.
 /// @return The sum of the two blocks.
 template <typename BlockType>
-inline BlockType add_block(BlockType lhs_block, BlockType rhs_block, bool &carry)
+inline auto add_block(BlockType lhs_block, BlockType rhs_block, bool &carry) -> BlockType
 {
     // Initialize the result.
     BlockType result = lhs_block;
@@ -79,7 +78,7 @@ inline BlockType add_block(BlockType lhs_block, BlockType rhs_block, bool &carry
 /// @param borrow The borrow from the previous operation.
 /// @return A reference to the first block.
 template <typename BlockType>
-inline BlockType &subtract_block_inplace(BlockType &lhs_block, BlockType rhs_block, bool &borrow)
+inline auto subtract_block_inplace(BlockType &lhs_block, BlockType rhs_block, bool &borrow) -> BlockType &
 {
     // Subtract the rhs block and the borrow from the lhs block directly.
     lhs_block -= rhs_block + borrow;
@@ -96,7 +95,7 @@ inline BlockType &subtract_block_inplace(BlockType &lhs_block, BlockType rhs_blo
 /// @param borrow The borrow from the previous operation.
 /// @return The difference of the two blocks.
 template <typename BlockType>
-inline BlockType subtract_block(BlockType lhs_block, BlockType rhs_block, bool &borrow)
+inline auto subtract_block(BlockType lhs_block, BlockType rhs_block, bool &borrow) -> BlockType
 {
     // Initialize the result.
     BlockType result = lhs_block;
@@ -108,7 +107,7 @@ inline BlockType subtract_block(BlockType lhs_block, BlockType rhs_block, bool &
 /// @param bitvector The input bitvector.
 /// @return Position of the most significant bit (0 if empty).
 template <std::size_t N>
-inline std::size_t most_significant_bit(const BitVector<N> &bitvector)
+inline auto most_significant_bit(const BitVector<N> &bitvector) -> std::size_t
 {
     // Iterate through the blocks starting from the most significant block.
     for (std::size_t blockIdx = BitVector<N>::NumBlocks; blockIdx > 0; --blockIdx) {
@@ -192,7 +191,7 @@ inline void shift_within_blocks(std::array<BlockType, NumBlocks> &data, std::siz
 /// @param shift The number of bits to shift.
 /// @return Reference to the shifted BitVector.
 template <std::size_t N>
-inline BitVector<N> &shift_left(BitVector<N> &bitvector, std::size_t shift)
+inline auto shift_left(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
 {
     // No change when shifting by 0.
     if (shift == 0) {
@@ -217,7 +216,7 @@ inline BitVector<N> &shift_left(BitVector<N> &bitvector, std::size_t shift)
 /// @param shift The number of bits to shift.
 /// @return Reference to the shifted BitVector.
 template <std::size_t N>
-inline BitVector<N> &shift_right(BitVector<N> &bitvector, std::size_t shift)
+inline auto shift_right(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
 {
     // No change when shifting by 0.
     if (shift == 0) {
@@ -240,7 +239,7 @@ inline BitVector<N> &shift_right(BitVector<N> &bitvector, std::size_t shift)
 /// @param shift The number of bits to shift.
 /// @return Reference to the shifted BitVector.
 template <std::size_t N>
-inline BitVector<N> shift_left(const BitVector<N> &bitvector, std::size_t shift)
+inline auto shift_left(const BitVector<N> &bitvector, std::size_t shift) -> BitVector<N>
 {
     BitVector<N> result = bitvector;
     return shift_left(result, shift);
@@ -251,7 +250,7 @@ inline BitVector<N> shift_left(const BitVector<N> &bitvector, std::size_t shift)
 /// @param shift The number of bits to shift.
 /// @return Reference to the shifted BitVector.
 template <std::size_t N>
-inline BitVector<N> shift_right(const BitVector<N> &bitvector, std::size_t shift)
+inline auto shift_right(const BitVector<N> &bitvector, std::size_t shift) -> BitVector<N>
 {
     BitVector<N> result = bitvector;
     return shift_right(result, shift);
@@ -262,7 +261,7 @@ inline BitVector<N> shift_right(const BitVector<N> &bitvector, std::size_t shift
 /// @param rhs The second BitVector.
 /// @return The sum of the two values.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<std::max(N1, N2)> sum(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto sum(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
 {
     using ResultType                = BitVector<std::max(N1, N2)>;
     using BlockType                 = typename ResultType::BlockType;
@@ -290,7 +289,7 @@ inline BitVector<std::max(N1, N2)> sum(const BitVector<N1> &lhs, const BitVector
 /// @param rhs The second BitVector.
 /// @return A reference to lhs.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1> &sum_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto sum_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
     using ResultType                = BitVector<N1>;
     using BlockType                 = typename ResultType::BlockType;
@@ -315,7 +314,7 @@ inline BitVector<N1> &sum_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The second BitVector.
 /// @return The difference between the two values.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<std::max(N1, N2)> sub(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto sub(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
 {
     using ResultType                = BitVector<std::max(N1, N2)>;
     using BlockType                 = typename ResultType::BlockType;
@@ -340,7 +339,7 @@ inline BitVector<std::max(N1, N2)> sub(const BitVector<N1> &lhs, const BitVector
 /// @param rhs The second BitVector.
 /// @return A reference to lhs.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1> &sub_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto sub_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
     using ResultType                = BitVector<N1>;
     using BlockType                 = typename ResultType::BlockType;
@@ -362,7 +361,7 @@ inline BitVector<N1> &sub_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The second BitVector of size N2.
 /// @return A BitVector of size (N1 + N2), containing the multiplication result.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1 + N2> mul(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto mul(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1 + N2>
 {
     // Prepare the result.
     BitVector<N1 + N2> result;
@@ -383,7 +382,7 @@ inline BitVector<N1 + N2> mul(const BitVector<N1> &lhs, const BitVector<N2> &rhs
 /// @param rhs The second BitVector.
 /// @return A reference to lhs.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1> &mul_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto mul_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
     // Make a copy of the result vector.
     BitVector<N1> lhs_copy(lhs);
@@ -405,23 +404,27 @@ inline BitVector<N1> &mul_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs)
 ///         - first: quotient (size of lhs)
 ///         - second: remainder (size of lhs)
 template <std::size_t N1, std::size_t N2>
-inline std::pair<BitVector<N1>, BitVector<N1>> div(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto div(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> std::pair<BitVector<N1>, BitVector<N1>>
 {
-    BitVector<N1> quotient, remainder, divisor;
+    BitVector<N1> quotient;
+    BitVector<N1> remainder;
+    BitVector<N1> divisor;
 
     if (rhs.none()) {
         throw std::domain_error("Division by zero is undefined.");
     }
 
     // Handle edge cases
-    if (lhs.none())
+    if (lhs.none()) {
         return {quotient, remainder}; // 0 / anything = 0 remainder 0
+    }
     if (lhs == rhs) {
         quotient[0] = true;
         return {quotient, remainder};
     } // lhs / lhs = 1
-    if (lhs < rhs)
+    if (lhs < rhs) {
         return {quotient, remainder}; // lhs < rhs means quotient = 0, remainder = lhs
+    }
 
     // Initialize remainder and divisor.
     remainder = lhs;
@@ -448,7 +451,7 @@ inline std::pair<BitVector<N1>, BitVector<N1>> div(const BitVector<N1> &lhs, con
 /// @param rhs The second BitVector of size N2.
 /// @return The modified lhs (quotient), and the remainder stored in a separate BitVector.
 template <std::size_t N1, std::size_t N2>
-inline std::pair<BitVector<N1> &, BitVector<N1>> div_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto div_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> std::pair<BitVector<N1> &, BitVector<N1>>
 {
     BitVector<N1> remainder;
     BitVector<N1> divisor(rhs);
@@ -459,7 +462,7 @@ inline std::pair<BitVector<N1> &, BitVector<N1>> div_inplace(BitVector<N1> &lhs,
     }
 
     if (lhs.none()) {
-        return {quotient, remainder}; // 0 / anything = 0 remainder 0
+        return {lhs = 0, remainder}; // 0 / anything = 0 remainder 0
     }
 
     if (lhs == rhs) {
@@ -504,7 +507,7 @@ inline std::pair<BitVector<N1> &, BitVector<N1>> div_inplace(BitVector<N1> &lhs,
 /// @param shift The number of bits to shift.
 /// @return The shifted BitVector.
 template <std::size_t N>
-inline BitVector<N> operator<<(const BitVector<N> &bitvector, std::size_t shift)
+inline auto operator<<(const BitVector<N> &bitvector, std::size_t shift) -> BitVector<N>
 {
     BitVector<N> result = bitvector;
     return bvlib::detail::shift_left(result, shift);
@@ -519,7 +522,7 @@ inline BitVector<N> operator<<(const BitVector<N> &bitvector, std::size_t shift)
 /// @param shift The number of bits to shift.
 /// @return Reference to the modified BitVector.
 template <std::size_t N>
-inline BitVector<N> &operator<<=(BitVector<N> &bitvector, std::size_t shift)
+inline auto operator<<=(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
 {
     return bvlib::detail::shift_left(bitvector, shift);
 }
@@ -533,7 +536,7 @@ inline BitVector<N> &operator<<=(BitVector<N> &bitvector, std::size_t shift)
 /// @param shift The number of bits to shift.
 /// @return The shifted BitVector.
 template <std::size_t N>
-inline BitVector<N> operator>>(const BitVector<N> &bitvector, std::size_t shift)
+inline auto operator>>(const BitVector<N> &bitvector, std::size_t shift) -> BitVector<N>
 {
     BitVector<N> result = bitvector;
     return bvlib::detail::shift_right(result, shift);
@@ -548,7 +551,7 @@ inline BitVector<N> operator>>(const BitVector<N> &bitvector, std::size_t shift)
 /// @param shift The number of bits to shift.
 /// @return Reference to the modified BitVector.
 template <std::size_t N>
-inline BitVector<N> &operator>>=(BitVector<N> &bitvector, std::size_t shift)
+inline auto operator>>=(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
 {
     return bvlib::detail::shift_right(bitvector, shift);
 }
@@ -562,7 +565,7 @@ inline BitVector<N> &operator>>=(BitVector<N> &bitvector, std::size_t shift)
 /// @param rhs The second BitVector.
 /// @return True if they are equal, false otherwise.
 template <std::size_t N1, std::size_t N2>
-inline bool operator==(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator==(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> bool
 {
     constexpr std::size_t minBlocks = std::min(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
     constexpr std::size_t maxBlocks = std::max(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
@@ -597,7 +600,7 @@ inline bool operator==(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return True if they are equal, false otherwise.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator==(const BitVector<N> &lhs, T rhs)
+inline auto operator==(const BitVector<N> &lhs, T rhs) -> bool
 {
     return lhs == BitVector<N>(rhs);
 }
@@ -607,7 +610,7 @@ inline bool operator==(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return True if they are equal, false otherwise.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator==(T lhs, const BitVector<N> &rhs)
+inline auto operator==(T lhs, const BitVector<N> &rhs) -> bool
 {
     return BitVector<N>(lhs) == rhs;
 }
@@ -621,7 +624,7 @@ inline bool operator==(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return True if they are not equal, false otherwise.
 template <std::size_t N1, std::size_t N2>
-inline bool operator!=(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator!=(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> bool
 {
     return !(lhs == rhs);
 }
@@ -631,7 +634,7 @@ inline bool operator!=(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return True if they are not equal, false otherwise.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator!=(const BitVector<N> &lhs, T rhs)
+inline auto operator!=(const BitVector<N> &lhs, T rhs) -> bool
 {
     return !(lhs == rhs);
 }
@@ -641,7 +644,7 @@ inline bool operator!=(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return True if they are not equal, false otherwise.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator!=(T lhs, const BitVector<N> &rhs)
+inline auto operator!=(T lhs, const BitVector<N> &rhs) -> bool
 {
     return !(lhs == rhs);
 }
@@ -655,7 +658,7 @@ inline bool operator!=(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return True if the first value is smaller than the second.
 template <std::size_t N1, std::size_t N2>
-inline bool operator<(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator<(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> bool
 {
     // constexpr std::size_t minBlocks = std::min(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
     constexpr std::size_t maxBlocks = std::max(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
@@ -666,10 +669,12 @@ inline bool operator<(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
         auto lhs_block  = (idx < BitVector<N1>::NumBlocks) ? lhs.data[idx] : 0;
         auto rhs_block  = (idx < BitVector<N2>::NumBlocks) ? rhs.data[idx] : 0;
 
-        if (lhs_block < rhs_block)
+        if (lhs_block < rhs_block) {
             return true;
-        if (lhs_block > rhs_block)
+        }
+        if (lhs_block > rhs_block) {
             return false;
+        }
     }
 
     return false;
@@ -680,7 +685,7 @@ inline bool operator<(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return True if the first value is smaller than the second.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator<(const BitVector<N> &lhs, T rhs)
+inline auto operator<(const BitVector<N> &lhs, T rhs) -> bool
 {
     return lhs < BitVector<N>(rhs);
 }
@@ -690,7 +695,7 @@ inline bool operator<(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return True if the first value is smaller than the second.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator<(T lhs, const BitVector<N> &rhs)
+inline auto operator<(T lhs, const BitVector<N> &rhs) -> bool
 {
     return BitVector<N>(lhs) < rhs;
 }
@@ -704,7 +709,7 @@ inline bool operator<(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return True if the first value is smaller than or equal to the second.
 template <std::size_t N1, std::size_t N2>
-inline bool operator<=(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator<=(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> bool
 {
     return (lhs < rhs) || (lhs == rhs);
 }
@@ -714,7 +719,7 @@ inline bool operator<=(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return True if the first value is smaller than or equal to the second.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator<=(const BitVector<N> &lhs, T rhs)
+inline auto operator<=(const BitVector<N> &lhs, T rhs) -> bool
 {
     return lhs <= BitVector<N>(rhs);
 }
@@ -724,7 +729,7 @@ inline bool operator<=(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return True if the first value is smaller than or equal to the second.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator<=(T lhs, const BitVector<N> &rhs)
+inline auto operator<=(T lhs, const BitVector<N> &rhs) -> bool
 {
     return BitVector<N>(lhs) <= rhs;
 }
@@ -738,7 +743,7 @@ inline bool operator<=(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return True if the first value is greater than the second.
 template <std::size_t N1, std::size_t N2>
-inline bool operator>(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator>(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> bool
 {
     return rhs < lhs; // Leverage the already optimized operator<
 }
@@ -748,7 +753,7 @@ inline bool operator>(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return True if the first value is greater than the second.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator>(const BitVector<N> &lhs, T rhs)
+inline auto operator>(const BitVector<N> &lhs, T rhs) -> bool
 {
     return lhs > BitVector<N>(rhs);
 }
@@ -758,7 +763,7 @@ inline bool operator>(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return True if the first value is greater than the second.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator>(T lhs, const BitVector<N> &rhs)
+inline auto operator>(T lhs, const BitVector<N> &rhs) -> bool
 {
     return BitVector<N>(lhs) > rhs;
 }
@@ -772,7 +777,7 @@ inline bool operator>(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return True if the first value is greater than or equal to the second.
 template <std::size_t N1, std::size_t N2>
-inline bool operator>=(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator>=(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> bool
 {
     return (lhs > rhs) || (lhs == rhs);
 }
@@ -782,7 +787,7 @@ inline bool operator>=(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return True if the first value is greater than or equal to the second.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator>=(const BitVector<N> &lhs, T rhs)
+inline auto operator>=(const BitVector<N> &lhs, T rhs) -> bool
 {
     return lhs >= BitVector<N>(rhs);
 }
@@ -792,7 +797,7 @@ inline bool operator>=(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return True if the first value is greater than or equal to the second.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline bool operator>=(T lhs, const BitVector<N> &rhs)
+inline auto operator>=(T lhs, const BitVector<N> &rhs) -> bool
 {
     return BitVector<N>(lhs) >= rhs;
 }
@@ -806,7 +811,7 @@ inline bool operator>=(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return The sum of the two values.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<std::max(N1, N2)> operator+(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator+(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
 {
     return bvlib::detail::sum(lhs, rhs);
 }
@@ -816,7 +821,7 @@ inline BitVector<std::max(N1, N2)> operator+(const BitVector<N1> &lhs, const Bit
 /// @param rhs The integer value.
 /// @return The sum of the two values.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> operator+(const BitVector<N> &lhs, T rhs)
+inline auto operator+(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 {
     return bvlib::detail::sum(lhs, BitVector<N>(rhs));
 }
@@ -826,7 +831,7 @@ inline BitVector<N> operator+(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return The sum of the two values.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> operator+(T lhs, const BitVector<N> &rhs)
+inline auto operator+(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 {
     return bvlib::detail::sum(BitVector<N>(lhs), rhs);
 }
@@ -836,7 +841,7 @@ inline BitVector<N> operator+(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return The sum stored in lhs.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1> &operator+=(BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator+=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
     static_assert(N1 >= N2, "LHS must be at least as large as RHS");
     bool carry = false;
@@ -859,7 +864,7 @@ inline BitVector<N1> &operator+=(BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return The sum stored in lhs.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> &operator+=(BitVector<N> &lhs, T rhs)
+inline auto operator+=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 {
     return (lhs += BitVector<N>(rhs));
 }
@@ -868,7 +873,7 @@ inline BitVector<N> &operator+=(BitVector<N> &lhs, T rhs)
 /// @param lhs The BitVector.
 /// @return The incremented BitVector.
 template <std::size_t N>
-inline BitVector<N> &operator++(BitVector<N> &lhs)
+inline auto operator++(BitVector<N> &lhs) -> BitVector<N> &
 {
     return lhs += 1;
 }
@@ -877,7 +882,7 @@ inline BitVector<N> &operator++(BitVector<N> &lhs)
 /// @param lhs The BitVector.
 /// @return The original BitVector before incrementing.
 template <std::size_t N>
-inline BitVector<N> operator++(BitVector<N> &lhs, int)
+inline auto operator++(BitVector<N> &lhs, int) -> BitVector<N>
 {
     BitVector<N> temp = lhs;
     lhs += 1;
@@ -893,7 +898,7 @@ inline BitVector<N> operator++(BitVector<N> &lhs, int)
 /// @param rhs The second BitVector.
 /// @return The difference between the two values.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<std::max(N1, N2)> operator-(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator-(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
 {
     return bvlib::detail::sub(lhs, rhs);
 }
@@ -903,7 +908,7 @@ inline BitVector<std::max(N1, N2)> operator-(const BitVector<N1> &lhs, const Bit
 /// @param rhs The integer value.
 /// @return The difference between the two values.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> operator-(const BitVector<N> &lhs, T rhs)
+inline auto operator-(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 {
     return bvlib::detail::sub(lhs, BitVector<N>(rhs));
 }
@@ -913,7 +918,7 @@ inline BitVector<N> operator-(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return The difference between the two values.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> operator-(T lhs, const BitVector<N> &rhs)
+inline auto operator-(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 {
     return bvlib::detail::sub(BitVector<N>(lhs), rhs);
 }
@@ -923,7 +928,7 @@ inline BitVector<N> operator-(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return The difference stored in lhs.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1> &operator-=(BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator-=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
     static_assert(N1 >= N2, "LHS must be at least as large as RHS");
     bool borrow = false;
@@ -945,7 +950,7 @@ inline BitVector<N1> &operator-=(BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return The difference stored in lhs.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> &operator-=(BitVector<N> &lhs, T rhs)
+inline auto operator-=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 {
     return (lhs -= BitVector<N>(rhs));
 }
@@ -954,7 +959,7 @@ inline BitVector<N> &operator-=(BitVector<N> &lhs, T rhs)
 /// @param lhs The BitVector.
 /// @return The incremented BitVector.
 template <std::size_t N>
-inline BitVector<N> &operator--(BitVector<N> &lhs)
+inline auto operator--(BitVector<N> &lhs) -> BitVector<N> &
 {
     return lhs -= 1;
 }
@@ -963,7 +968,7 @@ inline BitVector<N> &operator--(BitVector<N> &lhs)
 /// @param lhs The BitVector.
 /// @return The original BitVector before incrementing.
 template <std::size_t N>
-inline BitVector<N> operator--(BitVector<N> &lhs, int)
+inline auto operator--(BitVector<N> &lhs, int) -> BitVector<N>
 {
     BitVector<N> temp = lhs;
     lhs -= 1;
@@ -979,7 +984,7 @@ inline BitVector<N> operator--(BitVector<N> &lhs, int)
 /// @param rhs The second BitVector.
 /// @return The product of the two BitVectors.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1 + N2> operator*(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator*(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1 + N2>
 {
     return bvlib::detail::mul(lhs, rhs);
 }
@@ -989,7 +994,7 @@ inline BitVector<N1 + N2> operator*(const BitVector<N1> &lhs, const BitVector<N2
 /// @param rhs The integer value.
 /// @return A BitVector of size (N + N), containing the multiplication result.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N + N> operator*(const BitVector<N> &lhs, T rhs)
+inline auto operator*(const BitVector<N> &lhs, T rhs) -> BitVector<N + N>
 {
     return bvlib::detail::mul(lhs, BitVector<N>(rhs));
 }
@@ -999,7 +1004,7 @@ inline BitVector<N + N> operator*(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return A BitVector of size (N + N), containing the multiplication result.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N + N> operator*(T lhs, const BitVector<N> &rhs)
+inline auto operator*(T lhs, const BitVector<N> &rhs) -> BitVector<N + N>
 {
     return bvlib::detail::mul(BitVector<N>(lhs), rhs);
 }
@@ -1009,7 +1014,7 @@ inline BitVector<N + N> operator*(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return The product stored in the first BitVector.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1> &operator*=(BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator*=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
     return bvlib::detail::mul_inplace(lhs, rhs);
 }
@@ -1019,7 +1024,7 @@ inline BitVector<N1> &operator*=(BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return The product stored in the BitVector.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> &operator*=(BitVector<N> &lhs, T rhs)
+inline auto operator*=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 {
     return bvlib::detail::mul_inplace(lhs, BitVector<N>(rhs));
 }
@@ -1029,7 +1034,7 @@ inline BitVector<N> &operator*=(BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return The product stored in the BitVector.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline T &operator*=(T &lhs, const BitVector<N> &rhs)
+inline auto operator*=(T &lhs, const BitVector<N> &rhs) -> T &
 {
     return (lhs = bvlib::detail::mul(rhs, BitVector<N>(lhs)).template to_number<T>());
 }
@@ -1043,7 +1048,7 @@ inline T &operator*=(T &lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return The quotient of the two BitVectors.
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1> operator/(const BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator/(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1>
 {
     return bvlib::detail::div(lhs, rhs).first;
 }
@@ -1053,7 +1058,7 @@ inline BitVector<N1> operator/(const BitVector<N1> &lhs, const BitVector<N2> &rh
 /// @param rhs The integer value.
 /// @return The quotient of the division.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> operator/(const BitVector<N> &lhs, T rhs)
+inline auto operator/(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 {
     return bvlib::detail::div(lhs, BitVector<N>(rhs)).first;
 }
@@ -1063,7 +1068,7 @@ inline BitVector<N> operator/(const BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return The quotient of the division.
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> operator/(T lhs, const BitVector<N> &rhs)
+inline auto operator/(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 {
     return bvlib::detail::div(BitVector<N>(lhs), rhs).first;
 }
@@ -1073,7 +1078,7 @@ inline BitVector<N> operator/(T lhs, const BitVector<N> &rhs)
 /// @param rhs The second BitVector.
 /// @return The modified lhs (quotient).
 template <std::size_t N1, std::size_t N2>
-inline BitVector<N1> &operator/=(BitVector<N1> &lhs, const BitVector<N2> &rhs)
+inline auto operator/=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
     return bvlib::detail::div_inplace(lhs, rhs).first;
 }
@@ -1083,7 +1088,7 @@ inline BitVector<N1> &operator/=(BitVector<N1> &lhs, const BitVector<N2> &rhs)
 /// @param rhs The integer value.
 /// @return The modified lhs (quotient).
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline BitVector<N> &operator/=(BitVector<N> &lhs, T rhs)
+inline auto operator/=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 {
     return bvlib::detail::div_inplace(lhs, BitVector<N>(rhs)).first;
 }
@@ -1093,7 +1098,7 @@ inline BitVector<N> &operator/=(BitVector<N> &lhs, T rhs)
 /// @param rhs The BitVector.
 /// @return The modified lhs (quotient).
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-inline T &operator/=(T &lhs, const BitVector<N> &rhs)
+inline auto operator/=(T &lhs, const BitVector<N> &rhs) -> T &
 {
     return (lhs = bvlib::detail::div(BitVector<N>(lhs), rhs).first.template to_number<T>());
 }
