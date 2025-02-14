@@ -4,12 +4,18 @@
 
 #pragma once
 
-#include <stdexcept>
-#include <cstdint>
-#include <climits>
-#include <string>
-#include <cmath>
 #include <array>
+#include <climits>
+#include <cmath>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+
+enum : unsigned char {
+    BVLIB_MAJOR_VERSION = 1, ///< Major version of the library.
+    BVLIB_MINOR_VERSION = 0, ///< Minor version of the library.
+    BVLIB_MICRO_VERSION = 0  ///< Micro version of the library.
+};
 
 namespace bvlib
 {
@@ -20,7 +26,8 @@ namespace detail
 /// @brief Counts the number of 1s in a 32-bit integer.
 /// @param x The integer.
 /// @return The number of set bits.
-inline std::size_t popcount(std::uint32_t x)
+template <typename T>
+inline std::size_t popcount(T x)
 {
     std::size_t count = 0;
     while (x) {
@@ -33,15 +40,18 @@ inline std::size_t popcount(std::uint32_t x)
 /// @brief Counts the number of leading zeros in a 32-bit integer.
 /// @param x The input number.
 /// @return The number of leading zeros.
-inline std::size_t count_leading_zeros(uint32_t x)
+template <typename T>
+inline std::size_t count_leading_zeros(T x)
 {
     // Special case: all bits are zero.
     if (x == 0) {
-        return 32;
+        // Return the bit-width of T (based on CHAR_BIT).
+        return sizeof(T) * CHAR_BIT;
     }
-
     std::size_t count = 0;
-    for (uint32_t mask = 1U << 31; (x & mask) == 0; mask >>= 1) {
+    // Mask to check the most significant bit.
+    for (unsigned long mask = static_cast<unsigned long>(1) << (sizeof(T) * CHAR_BIT - 1); (x & mask) == 0;
+         mask >>= 1) {
         count++;
     }
     return count;
@@ -57,7 +67,8 @@ inline std::size_t count_leading_zeros(uint32_t x)
 /// @tparam BlockType The datatype used to store blocks of bits (e.g.,///
 /// `uint32_t`, `uint64_t`).
 template <typename BlockType>
-class BitReference {
+class BitReference
+{
 private:
     /// @brief The block containing the bit being referenced.
     BlockType &_block;
@@ -73,7 +84,8 @@ public:
     /// @param b The block that contains the bit.
     /// @param pos The position of the bit within the block.
     BitReference(BlockType &b, std::size_t pos)
-        : _block(b), _pos(pos)
+        : _block(b)
+        , _pos(pos)
     {
         // Nothing to do
     }
@@ -84,10 +96,7 @@ public:
     /// It returns `true` if the bit at the specified position is set, `false` otherwise.
     ///
     /// @return `true` if the referenced bit is set, `false` otherwise.
-    operator bool() const
-    {
-        return (_block & (BlockType(1) << _pos)) != 0;
-    }
+    operator bool() const { return (_block & (BlockType(1) << _pos)) != 0; }
 
     /// @brief Assigns a value to the referenced bit.
     /// @details
@@ -112,12 +121,31 @@ public:
 /// @brief Class which reproduces the behaviour of bit-vector.
 /// @tparam N Lenght of the bit-vector
 template <std::size_t N>
-class BitVector {
+class BitVector
+{
 public:
-    using BlockType                           = std::uint32_t;
-    static constexpr std::size_t BitsPerBlock = sizeof(BlockType) * CHAR_BIT;
-    static constexpr std::size_t NumBlocks    = (N + BitsPerBlock - 1) / BitsPerBlock;
+    /// @brief Defines the block type used for storing bits.
+    /// @details The block type is defined as a 64-bit unsigned integer, which
+    /// will store multiple bits per block for efficient operations.
+    using BlockType = std::uint32_t;
 
+    /// @brief Number of bits per block.
+    /// @details This is calculated as the size of the block type in bits, using
+    /// `sizeof(BlockType) * CHAR_BIT` to support different sizes of
+    /// `BlockType`.
+    static constexpr std::size_t BitsPerBlock = sizeof(BlockType) * CHAR_BIT;
+
+    /// @brief Number of blocks required to store N bits.
+    /// @details This is calculated by dividing the total number of bits (N) by
+    /// the number of bits per block (`BitsPerBlock`). The result is rounded up
+    /// to ensure that all bits fit into the required number of blocks.
+    static constexpr std::size_t NumBlocks = (N + BitsPerBlock - 1) / BitsPerBlock;
+
+    /// @brief The array holding the actual data of the BitVector.
+    /// @details This array contains the blocks that hold the bits of the
+    /// BitVector. It is sized according to `NumBlocks`, and each block is of
+    /// type `BlockType` (e.g., `std::uint64_t`), allowing efficient bitwise
+    /// operations.
     std::array<BlockType, NumBlocks> data = {};
 
     /// @brief Constructs a new BitVector (all bits set to 0).
@@ -159,6 +187,7 @@ public:
     }
 
     /// @brief Copies another BitVector into this one, resizing if necessary.
+    /// @tparam N2 The size of the `other` BitVector.
     /// @param other The other BitVector.
     template <std::size_t N2>
     explicit BitVector(const BitVector<N2> &other)
@@ -168,7 +197,6 @@ public:
         for (std::size_t i = 0; i < minBlocks; ++i) {
             data[i] = other.data[i];
         }
-
         // Ensure extra bits beyond N2 are cleared.
         if constexpr (N2 < N) {
             trim();
@@ -178,6 +206,7 @@ public:
     virtual ~BitVector() = default;
 
     /// @brief Returns a bitvector of all ones.
+    /// @return A bitvector of all 1s.
     static inline BitVector<N> ones()
     {
         BitVector<N> result;
@@ -187,10 +216,8 @@ public:
     }
 
     /// @brief Returns a bitvector of all zeros.
-    static inline BitVector<N> zeros()
-    {
-        return BitVector<N>();
-    }
+    /// @return A bitvector of all 0s.
+    static inline BitVector<N> zeros() { return BitVector<N>(); }
 
     /// @brief Sets all bits to 1.
     /// @return A reference to the modified BitVector.
@@ -311,10 +338,7 @@ public:
 
     /// @brief Returns the size of the bit-vector.
     /// @return the size of the bitvector.
-    inline constexpr std::size_t size() const noexcept
-    {
-        return N;
-    }
+    inline constexpr std::size_t size() const noexcept { return N; }
 
     /// @brief Returns the number of bits which are set.
     /// @return the number of bits which are set.
@@ -327,43 +351,49 @@ public:
         return result;
     }
 
-    /// @brief Tests whether all the bits are on.
+    /// @brief Tests whether all the bits in the BitVector are set to 1.
+    /// @return `true` if all bits are 1, otherwise `false`.
     inline bool all() const
     {
+        // Check all blocks except the last one.
         for (std::size_t i = 0; i < NumBlocks - 1; ++i) {
-            if (data[i] != ~BlockType(0))
+            if (data[i] != ~BlockType(0)) {
                 return false;
+            }
         }
-        // Check the last block (handle excess bits)
-        constexpr std::size_t extraBits = NumBlocks * BitsPerBlock - N;
-        if (extraBits > 0) {
-            BlockType mask = (BlockType(1) << (BitsPerBlock - extraBits)) - 1;
-            return (data[NumBlocks - 1] & mask) == mask;
+        // For the last block, handle excess bits.
+        const std::size_t extraBits = NumBlocks * BitsPerBlock - N;
+        if (extraBits == 0 || (data[NumBlocks - 1] == ~BlockType(0))) {
+            return true;
         }
-        return data[NumBlocks - 1] == ~BlockType(0);
+
+        // Create a mask for the last block's valid bits and check.
+        BlockType mask = (BlockType(1) << (BitsPerBlock - extraBits)) - 1;
+        return (data[NumBlocks - 1] & mask) == mask;
     }
 
-    /// @brief Tests whether any of the bits are on.
+    /// @brief Tests whether any bit in the BitVector is set to 1.
+    /// @return `true` if at least one bit is set to 1, otherwise `false`.
     inline bool any() const
     {
         for (const auto &block : data) {
-            if (block != 0)
+            if (block != 0) {
                 return true;
+            }
         }
         return false;
     }
 
-    /// @brief Tests whether none of the bits are on.
-    inline bool none() const
-    {
-        return !any();
-    }
+    /// @brief Tests whether all the bits in the BitVector are set to 0.
+    /// @return `true` if all bits are set to 0, otherwise `false`.
+    inline bool none() const { return !any(); }
 
     /// @brief Returns the sign bit (MSB).
     /// @return `true` if the sign bit is 1 (negative in two's complement), `false` otherwise.
     inline bool sign() const
     {
-        return get(N - 1); // Check the most significant bit (MSB)
+        // Check the most significant bit (MSB).
+        return get(N - 1);
     }
 
     /// @brief Performs two's complement (bitwise negation + manual addition).
@@ -451,7 +481,7 @@ public:
     }
 
     /// @brief Copies rhs into this BitVector, iterating from left to right.
-    /// @tparam N2 Size of the source BitVector.
+    /// @tparam N2 The size of the `rhs` BitVector.
     /// @param rhs The BitVector to copy from.
     /// @return A reference to the modified BitVector.
     template <std::size_t N2>
@@ -489,7 +519,10 @@ public:
         return detail::BitReference<BlockType>(data[pos / BitsPerBlock], pos % BitsPerBlock);
     }
 
-    /// @brief Copies rhs into this BitVector.
+    /// @brief Copies the contents of the provided BitVector into this BitVector.
+    /// @tparam N2 The size of the `rhs` BitVector.
+    /// @param rhs The BitVector to copy from.
+    /// @return A reference to this BitVector (the destination).
     template <std::size_t N2>
     inline BitVector<N> &operator=(const BitVector<N2> &rhs)
     {
@@ -506,6 +539,7 @@ public:
 
     /// @brief Copies the string into this BitVector (e.g., "1010111").
     /// @param str The input string.
+    /// @return A reference to this BitVector (the destination).
     inline BitVector<N> &operator=(const std::string &str)
     {
         // Clear all bits.
@@ -543,23 +577,17 @@ public:
     /// @brief Returns the bit at the given position using array indexing.
     /// @param pos The bit position.
     /// @return True if the bit is set, false otherwise.
-    inline bool operator[](std::size_t pos) const
-    {
-        return at(pos);
-    }
+    inline bool operator[](std::size_t pos) const { return at(pos); }
 
     /// @brief Returns a modifiable reference-like proxy to a bit using array indexing.
     /// @param pos The bit position.
     /// @return A BitReference object allowing modification of the bit.
-    inline detail::BitReference<BlockType> operator[](std::size_t pos)
-    {
-        return at(pos);
-    }
+    inline detail::BitReference<BlockType> operator[](std::size_t pos) { return at(pos); }
 
     /// @brief Converts the BitVector to a signed or unsigned integer.
     /// @tparam T The target integer type.
     /// @return The integer representation of the BitVector.
-    template <typename T>
+    template <typename T = std::size_t>
     constexpr inline T to_number() const
     {
         static_assert(std::is_integral<T>::value, "T must be an integral type");
@@ -580,6 +608,7 @@ public:
     }
 
     /// @brief Converts the BitVector to a string.
+    /// @return The binary string representing the bitvector.
     std::string to_string() const
     {
         std::string str;

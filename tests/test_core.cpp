@@ -420,7 +420,9 @@ void test_trim_large_vector()
 {
     bvlib::BitVector<22> bv("11111111111111110000111111000011"); // Complex pattern, last block has extra bits
     bv.trim();
-    assert(bv.to_string() == "1111110000111111000011" && "trim() should clear only the extra bits in the last block while preserving the rest");
+    assert(
+        bv.to_string() == "1111110000111111000011" &&
+        "trim() should clear only the extra bits in the last block while preserving the rest");
 }
 
 /// @brief Tests `trim()` with the minimal bitvector size that has extra bits.
@@ -444,7 +446,9 @@ void test_trim_no_op_on_already_trimmed_vector()
 {
     bvlib::BitVector<8> bv("11110000"); // No extra bits to trim
     bv.trim();                          // Should leave the vector unchanged
-    assert(bv.to_string() == "11110000" && "trim() should leave the vector unchanged when there are no extra bits to trim");
+    assert(
+        bv.to_string() == "11110000" &&
+        "trim() should leave the vector unchanged when there are no extra bits to trim");
 }
 
 // ============================================================================
@@ -631,8 +635,9 @@ void test_assign_exceeds_32bit_smaller_to_larger()
     bvlib::BitVector<16> bv1("1111000011110000");
     bvlib::BitVector<64> bv2("0000000000000000000000000000000000000000000000000000000000000000");
     bv2.assign(bv1);
-    assert(bv2.to_string().substr(48) == "1111000011110000" &&
-           "assign() failed from <16> to <64>, bits not placed correctly in the lower portion");
+    assert(
+        bv2.to_string().substr(48) == "1111000011110000" &&
+        "assign() failed from <16> to <64>, bits not placed correctly in the lower portion");
 }
 
 void test_assign_exceeds_32bit_larger_to_smaller()
@@ -640,9 +645,10 @@ void test_assign_exceeds_32bit_larger_to_smaller()
     bvlib::BitVector<64> bv1("1111111111111111000000000000000011111111111111110000000000000000");
     bvlib::BitVector<16> bv2("0000000000000000");
     bv2.assign(bv1);
-    assert(bv2.to_string() == "0000000000000000" /* at first glance */ ||
-           bv2.to_string() == "1111000000000000" /* or depends if lower bits were set */ &&
-               "assign() failed from <64> to <16>, check if bits are copied correctly");
+    assert(
+        bv2.to_string() == "0000000000000000" /* at first glance */ ||
+        bv2.to_string() == "1111000000000000" /* or depends if lower bits were set */ &&
+            "assign() failed from <64> to <16>, check if bits are copied correctly");
 }
 
 // ============================================================================
@@ -735,7 +741,9 @@ void test_at_modify()
     bv.at(6) = true;  // Set   bit at position 6
     bv.at(7) = false; // Clear bit at position 7
 
-    assert(bv.to_string() == "01010101" && "at() should allow modifying the bit at position 4, 5, 6, and 7 back to original value");
+    assert(
+        bv.to_string() == "01010101" &&
+        "at() should allow modifying the bit at position 4, 5, 6, and 7 back to original value");
 }
 
 /// @brief Tests the `at()` function when accessing out-of-range indices.
@@ -768,7 +776,9 @@ void test_at_modify_state()
     bv.at(3) = true;
     bv.at(5) = true;
     bv.at(7) = true;
-    assert(bv.to_string() == "0000000010101010" && "at() should correctly modify specific bits at positions 1, 3, 5, and 7");
+    assert(
+        bv.to_string() == "0000000010101010" &&
+        "at() should correctly modify specific bits at positions 1, 3, 5, and 7");
 
     bv.at(15) = true; // Set MSB
     assert(bv.to_string() == "1000000010101010" && "at() should correctly modify the MSB (bit 15)");
@@ -788,8 +798,9 @@ void test_at_large_bitvector()
     bv.at(0)  = true;  // Modify the LSB
     bv.at(63) = false; // Modify the MSB
 
-    assert(bv.to_string() == "0010101010101010101010101010101010101010101010101010101010101011" &&
-           "at() should allow modification of the MSB and LSB in a large BitVector");
+    assert(
+        bv.to_string() == "0010101010101010101010101010101010101010101010101010101010101011" &&
+        "at() should allow modification of the MSB and LSB in a large BitVector");
 }
 
 /// @brief Tests that `at()` modifies a large bitvector correctly with multiple changes.
@@ -803,8 +814,9 @@ void test_at_large_bitvector_multiple_changes()
     bv.at(7)  = false;
     bv.at(63) = false;
 
-    assert(bv.to_string() == "0010101010101010101010101010101010101010101010101010101000001000" &&
-           "at() should correctly modify multiple bits in a large BitVector");
+    assert(
+        bv.to_string() == "0010101010101010101010101010101010101010101010101010101000001000" &&
+        "at() should correctly modify multiple bits in a large BitVector");
 
     // Resetting some bits back to 1
     bv.at(1)  = true;
@@ -812,8 +824,9 @@ void test_at_large_bitvector_multiple_changes()
     bv.at(7)  = true;
     bv.at(63) = true;
 
-    assert(bv.to_string() == "1010101010101010101010101010101010101010101010101010101010101010" &&
-           "at() should correctly reset modified bits in a large BitVector");
+    assert(
+        bv.to_string() == "1010101010101010101010101010101010101010101010101010101010101010" &&
+        "at() should correctly reset modified bits in a large BitVector");
 }
 
 // ============================================================================

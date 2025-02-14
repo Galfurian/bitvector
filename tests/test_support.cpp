@@ -145,19 +145,28 @@ void test_sub_bits()
 void test_most_significant_bit()
 {
     bvlib::BitVector<32> bv1("00000000000000000000000000001010");
-    assert(bvlib::detail::most_significant_bit(bv1) == 3 && "most_significant_bit() should return correct position for bit 3");
+    assert(
+        bvlib::detail::most_significant_bit(bv1) == 3 &&
+        "most_significant_bit() should return correct position for bit 3");
 
     bvlib::BitVector<32> bv2("10000000000000000000000000000000");
-    assert(bvlib::detail::most_significant_bit(bv2) == 31 && "most_significant_bit() should return 31 for the most significant bit");
+    assert(
+        bvlib::detail::most_significant_bit(bv2) == 31 &&
+        "most_significant_bit() should return 31 for the most significant bit");
 
     bvlib::BitVector<32> bv3("00000000000000000000000000000000");
-    assert(bvlib::detail::most_significant_bit(bv3) == 0 && "most_significant_bit() should return 0 if no bits are set");
+    assert(
+        bvlib::detail::most_significant_bit(bv3) == 0 && "most_significant_bit() should return 0 if no bits are set");
 
     bvlib::BitVector<32> bv4("01000000000000000000000000000000");
-    assert(bvlib::detail::most_significant_bit(bv4) == 30 && "most_significant_bit() should return the correct position for bit 30");
+    assert(
+        bvlib::detail::most_significant_bit(bv4) == 30 &&
+        "most_significant_bit() should return the correct position for bit 30");
 
     bvlib::BitVector<32> bv5("00000000000000010000000000000000");
-    assert(bvlib::detail::most_significant_bit(bv5) == 16 && "most_significant_bit() should return correct position for bit 17");
+    assert(
+        bvlib::detail::most_significant_bit(bv5) == 16 &&
+        "most_significant_bit() should return correct position for bit 17");
 }
 
 // ============================================================================

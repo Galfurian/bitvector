@@ -70,12 +70,15 @@ void test_shift_left()
     // Test case 2: Shift by 1
     bvlib::BitVector<32> bv32_1("11001100110011001100110011001100");
     bv32_1 = bvlib::detail::shift_left(bv32_1, 1);
-    assert(bv32_1.to_string() == "10011001100110011001100110011000" && "Shift left by 1 should shift bits left and add 0");
+    assert(
+        bv32_1.to_string() == "10011001100110011001100110011000" && "Shift left by 1 should shift bits left and add 0");
 
     // Test case 3: Shift by 31 (maximum left shift)
     bvlib::BitVector<32> bv32_2("11001100110011001100110011001101");
     bv32_2 = bvlib::detail::shift_left(bv32_2, 31);
-    assert(bv32_2.to_string() == "10000000000000000000000000000000" && "Shift left by 31 should move leftmost bit to the MSB");
+    assert(
+        bv32_2.to_string() == "10000000000000000000000000000000" &&
+        "Shift left by 31 should move leftmost bit to the MSB");
 
     // Test case 4: Shift by 32 (overflow, reset to all zeros)
     bvlib::BitVector<32> bv32_3("11001100110011001100110011001100");
@@ -164,12 +167,16 @@ void test_shift_right()
     // Test case 2: Shift by 1
     bvlib::BitVector<32> bv32_1("11001100110011001100110011001100");
     bv32_1 = bvlib::detail::shift_right(bv32_1, 1);
-    assert(bv32_1.to_string() == "01100110011001100110011001100110" && "Shift right by 1 should shift bits right and add 0");
+    assert(
+        bv32_1.to_string() == "01100110011001100110011001100110" &&
+        "Shift right by 1 should shift bits right and add 0");
 
     // Test case 3: Shift by 31 (maximum right shift)
     bvlib::BitVector<32> bv32_2("11001100110011001100110011001101");
     bv32_2 = bvlib::detail::shift_right(bv32_2, 31);
-    assert(bv32_2.to_string() == "00000000000000000000000000000001" && "Shift right by 31 should move rightmost bit to the LSB");
+    assert(
+        bv32_2.to_string() == "00000000000000000000000000000001" &&
+        "Shift right by 31 should move rightmost bit to the LSB");
 
     // Test case 4: Shift by 32 (overflow, reset to all zeros)
     bvlib::BitVector<32> bv32_3("11001100110011001100110011001100");

@@ -1,10 +1,10 @@
 #include "bvlib/bitvector.hpp"
-#include "bvlib/math.hpp"
 #include "bvlib/io.hpp"
+#include "bvlib/math.hpp"
 
 #include <iomanip>
-#include <vector>
 #include <random>
+#include <vector>
 
 int main(int, char *[])
 {
