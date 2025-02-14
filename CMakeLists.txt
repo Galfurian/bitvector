@@ -110,19 +110,25 @@ if(BUILD_TESTS)
     # CMake has support for adding tests to a project.
     enable_testing()
 
-    # Add the test.
-    add_executable(${PROJECT_NAME}_test_operators ${PROJECT_SOURCE_DIR}/tests/test_operators.cpp)
-    # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_test_operators ${PROJECT_NAME})
-    # Add the test.
-    add_test(${PROJECT_NAME}_test_operators_run ${PROJECT_NAME}_test_operators)
+    add_executable(${PROJECT_NAME}_test_core ${PROJECT_SOURCE_DIR}/tests/test_core.cpp)
+    target_link_libraries(${PROJECT_NAME}_test_core ${PROJECT_NAME})
+    add_test(${PROJECT_NAME}_test_core_run ${PROJECT_NAME}_test_core)
 
-    # Add the test.
-    add_executable(${PROJECT_NAME}_test_comparison tests/test_comparison.cpp)
-    # Liking for the test.
-    target_link_libraries(${PROJECT_NAME}_test_comparison ${PROJECT_NAME})
-    # Add the test.
-    add_test(${PROJECT_NAME}_test_comparison_run ${PROJECT_NAME}_test_comparison)
+    add_executable(${PROJECT_NAME}_test_support ${PROJECT_SOURCE_DIR}/tests/test_support.cpp)
+    target_link_libraries(${PROJECT_NAME}_test_support ${PROJECT_NAME})
+    add_test(${PROJECT_NAME}_test_support_run ${PROJECT_NAME}_test_support)
+
+    add_executable(${PROJECT_NAME}_test_shift ${PROJECT_SOURCE_DIR}/tests/test_shift.cpp)
+    target_link_libraries(${PROJECT_NAME}_test_shift ${PROJECT_NAME})
+    add_test(${PROJECT_NAME}_test_shift_run ${PROJECT_NAME}_test_shift)
+
+    # add_executable(${PROJECT_NAME}_test_operators ${PROJECT_SOURCE_DIR}/tests/test_operators.cpp)
+    # target_link_libraries(${PROJECT_NAME}_test_operators ${PROJECT_NAME})
+    # add_test(${PROJECT_NAME}_test_operators_run ${PROJECT_NAME}_test_operators)
+
+    # add_executable(${PROJECT_NAME}_test_comparison tests/test_comparison.cpp)
+    # target_link_libraries(${PROJECT_NAME}_test_comparison ${PROJECT_NAME})
+    # add_test(${PROJECT_NAME}_test_comparison_run ${PROJECT_NAME}_test_comparison)
     
 endif()
 
