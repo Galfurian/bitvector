@@ -109,6 +109,8 @@ public:
 template <std::size_t N>
 class BitVector
 {
+    static_assert(N > 0, "BitVector length must be greater than 0");
+
 public:
     /// @brief Defines the block type used for storing bits.
     /// @details The block type is defined as a 64-bit unsigned integer, which

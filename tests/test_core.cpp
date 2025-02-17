@@ -389,14 +389,6 @@ void test_trim_minimal_size()
     assert(bv.to_string() == "11" && "trim() should leave the vector unchanged when there are no extra bits to trim");
 }
 
-/// @brief Tests `trim()` with an empty bitvector (N = 0).
-void test_trim_empty_vector()
-{
-    bvlib::BitVector<0> bv; // Empty bit vector
-    bv.trim();              // Nothing should happen, no exception
-    assert(bv.to_string() == "" && "trim() should not alter an empty vector");
-}
-
 /// @brief Tests `trim()` when there's no need to trim extra bits (vector already correctly sized).
 void test_trim_no_op_on_already_trimmed_vector()
 {
@@ -871,7 +863,6 @@ void run_all_trim_tests()
     test_trim_with_extra_bits();
     test_trim_large_vector();
     test_trim_minimal_size();
-    test_trim_empty_vector();
     test_trim_no_op_on_already_trimmed_vector();
 
     std::cout << "    ✅ All trim tests passed!" << std::endl;
