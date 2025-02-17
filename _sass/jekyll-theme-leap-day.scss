@@ -312,7 +312,7 @@ nav {
   top: 220px;
   left: 50%;
   margin-left: -650px;
-  text-align: right;
+  text-align: left;
 
   ul {
     list-style: none;
@@ -338,11 +338,20 @@ nav {
 
       &.tag-h2 {
         font-size: 1.2em;
+        margin-left: 10px;
+        padding-left: 5px;
 
         a {
           font-weight: bold;
           color: #93C5FD;
         }
+      }
+
+      &.tag-h3 {
+        font-size: 1.1em;
+
+        margin-left: 20px;
+        padding-left: 10px;
       }
     }
 
