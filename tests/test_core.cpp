@@ -1,3 +1,9 @@
+/// @file test_core.cpp
+/// @author Enrico Fraccaroli (enry.frak@gmail.com)
+/// @brief Tests core functionalities.
+/// @copyright Copyright (c) 2024-2025 Enrico Fraccaroli <enry.frak@gmail.com>
+/// Licensed under the MIT License. See LICENSE.md file root for details.
+
 #include <cassert>
 #include <iostream>
 
@@ -320,56 +326,6 @@ void test_flip_out_of_range()
     try {
         bv.flip(8); // Out of range
         assert(false && "flip(n) should throw out_of_range for n >= size");
-    } catch (const std::out_of_range &) {
-        // Expected behavior
-    }
-}
-
-// ============================================================================
-// TOGGLE TESTS
-// ============================================================================
-
-/// @brief Tests `toggle(pos)` to ensure a single bit is inverted.
-void test_toggle_single_bit()
-{
-    bvlib::BitVector<8> bv;
-    bv.toggle(2);
-    assert(bv.to_string() == "00000100" && "toggle(n) should invert bit n");
-    bv.toggle(2);
-    assert(bv.to_string() == "00000000" && "toggle(n) again should restore original value");
-}
-
-/// @brief Tests `toggle(pos)` with an out-of-range index.
-void test_toggle_out_of_range()
-{
-    bvlib::BitVector<8> bv;
-    try {
-        bv.toggle(8); // Out of range
-        assert(false && "toggle(n) should throw out_of_range for n >= size");
-    } catch (const std::out_of_range &) {
-        // Expected behavior
-    }
-}
-
-// ============================================================================
-// GET TESTS
-// ============================================================================
-
-/// @brief Tests `get(pos)` to ensure it retrieves correct values.
-void test_get_bit()
-{
-    bvlib::BitVector<8> bv("10101010");
-    assert(bv.get(0) == false && "get(0) should return 0");
-    assert(bv.get(1) == true && "get(1) should return 1");
-}
-
-/// @brief Tests `get(pos)` with an out-of-range index.
-void test_get_out_of_range()
-{
-    bvlib::BitVector<8> bv;
-    try {
-        bv.get(8); // Out of range
-        assert(false && "get(n) should throw out_of_range for n >= size");
     } catch (const std::out_of_range &) {
         // Expected behavior
     }
@@ -881,7 +837,7 @@ void run_ones_zeros_tests()
     std::cout << "    ✅ All ones/zeros tests passed!\n";
 }
 
-/// @brief Runs all tests related to the `set/reset/flip/toggle/get/set_sign` functions.
+/// @brief Runs all tests related to the `set/reset/flip/set_sign` functions.
 void run_set_reset_flip_tests()
 {
     // Set tests
@@ -901,19 +857,11 @@ void run_set_reset_flip_tests()
     test_flip_single_bit();
     test_flip_out_of_range();
 
-    // Toggle tests
-    test_toggle_single_bit();
-    test_toggle_out_of_range();
-
-    // Get tests
-    test_get_bit();
-    test_get_out_of_range();
-
     // Set sign tests
     test_set_sign_true();
     test_set_sign_false();
 
-    std::cout << "    ✅ All set/reset/flip/toggle/get/set_sign tests passed!\n";
+    std::cout << "    ✅ All set/reset/flip/set_sign tests passed!\n";
 }
 
 /// @brief Runs all tests related to the `trim()` function.

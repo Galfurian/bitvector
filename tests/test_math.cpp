@@ -1,3 +1,9 @@
+/// @file test_math.cpp
+/// @author Enrico Fraccaroli (enry.frak@gmail.com)
+/// @brief Tests math operators.
+/// @copyright Copyright (c) 2024-2025 Enrico Fraccaroli <enry.frak@gmail.com>
+/// Licensed under the MIT License. See LICENSE.md file root for details.
+
 #include "bvlib/math.hpp"
 
 #include <cassert>

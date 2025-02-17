@@ -1,3 +1,9 @@
+/// @file test_shift.cpp
+/// @author Enrico Fraccaroli (enry.frak@gmail.com)
+/// @brief Tests shift operators.
+/// @copyright Copyright (c) 2024-2025 Enrico Fraccaroli <enry.frak@gmail.com>
+/// Licensed under the MIT License. See LICENSE.md file root for details.
+
 #include <cassert>
 #include <iostream>
 

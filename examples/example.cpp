@@ -1,3 +1,9 @@
+/// @file example.cpp
+/// @author Enrico Fraccaroli (enry.frak@gmail.com)
+/// @brief A simple example.
+/// @copyright Copyright (c) 2024-2025 Enrico Fraccaroli <enry.frak@gmail.com>
+/// Licensed under the MIT License. See LICENSE.md file root for details.
+
 #include "bvlib/bitvector.hpp"
 #include "bvlib/io.hpp"
 #include "bvlib/math.hpp"

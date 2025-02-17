@@ -1,6 +1,8 @@
 /// @file math.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief Mathematical operations among bitvectors.
+/// @copyright Copyright (c) 2024-2025 Enrico Fraccaroli <enry.frak@gmail.com>
+/// Licensed under the MIT License. See LICENSE.md file root for details.
 
 #pragma once
 
@@ -13,6 +15,47 @@ namespace bvlib
 
 namespace detail
 {
+
+/// @brief Counts the number of leading zeros in a 32-bit integer.
+/// @param x The input number.
+/// @return The number of leading zeros.
+template <typename T>
+inline auto count_leading_zeros(T x) -> std::size_t
+{
+    // Special case: all bits are zero.
+    if (x == 0) {
+        // Return the bit-width of T (based on CHAR_BIT).
+        return sizeof(T) * CHAR_BIT;
+    }
+    std::size_t count = 0;
+    // Mask to check the most significant bit.
+    for (unsigned long mask = static_cast<unsigned long>(1) << (sizeof(T) * CHAR_BIT - 1); (x & mask) == 0;
+         mask >>= 1) {
+        count++;
+    }
+    return count;
+}
+
+/// @brief Returns the position of the most significant bit inside the given BitVector.
+/// @param bitvector The input bitvector.
+/// @return Position of the most significant bit (0 if empty).
+template <std::size_t N>
+inline auto most_significant_bit(const BitVector<N> &bitvector) -> std::size_t
+{
+    // Iterate through the blocks starting from the most significant block.
+    for (std::size_t blockIdx = BitVector<N>::NumBlocks; blockIdx > 0; --blockIdx) {
+        // Get the current block.
+        const auto &block = bitvector.data[blockIdx - 1];
+        // Check if the current block has any bits set.
+        if (block) {
+            // Calculate the position of the most significant bit.
+            return ((blockIdx - 1) * BitVector<N>::BitsPerBlock) +
+                   (BitVector<N>::BitsPerBlock - 1 - detail::count_leading_zeros(block));
+        }
+    }
+    // Return 0 if no bits are set (i.e., the BitVector is empty or all bits are 0).
+    return 0;
+}
 
 /// @brief Adds two bits, and sets the carry.
 /// @param b1 fist bit.
@@ -101,27 +144,6 @@ inline auto subtract_block(BlockType lhs_block, BlockType rhs_block, bool &borro
     BlockType result = lhs_block;
     // Subtract the blocks.
     return subtract_block_inplace(result, rhs_block, borrow);
-}
-
-/// @brief Returns the position of the most significant bit inside the given BitVector.
-/// @param bitvector The input bitvector.
-/// @return Position of the most significant bit (0 if empty).
-template <std::size_t N>
-inline auto most_significant_bit(const BitVector<N> &bitvector) -> std::size_t
-{
-    // Iterate through the blocks starting from the most significant block.
-    for (std::size_t blockIdx = BitVector<N>::NumBlocks; blockIdx > 0; --blockIdx) {
-        // Get the current block.
-        const auto &block = bitvector.data[blockIdx - 1];
-        // Check if the current block has any bits set.
-        if (block) {
-            // Calculate the position of the most significant bit.
-            return ((blockIdx - 1) * BitVector<N>::BitsPerBlock) +
-                   (BitVector<N>::BitsPerBlock - 1 - detail::count_leading_zeros(block));
-        }
-    }
-    // Return 0 if no bits are set (i.e., the BitVector is empty or all bits are 0).
-    return 0;
 }
 
 /// @brief Shifts full blocks of a BitVector to the right or left.
@@ -369,7 +391,7 @@ inline auto mul(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector
     const BitVector<N1 + N2> temp(rhs);
     // Perform multiplication using bitwise shifts and additions.
     for (std::size_t i = 0; i < lhs.size(); ++i) {
-        if (lhs.get(i)) {
+        if (lhs.at(i)) {
             // Shift the rhs by i bits and add.
             sum_inplace(result, shift_left(temp, i));
         }
@@ -389,7 +411,7 @@ inline auto mul_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVect
     // Reset the result vector.
     lhs.reset();
     for (std::size_t i = 0; i < lhs.size(); ++i) {
-        if (lhs_copy.get(i)) {
+        if (lhs_copy.at(i)) {
             // Shift the rhs by i bits and add.
             sum_inplace(lhs, shift_left(rhs, i));
         }
@@ -494,6 +516,25 @@ inline auto div_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> std::pa
 
     lhs = quotient;          // Assign the quotient back to lhs
     return {lhs, remainder}; // Return lhs (quotient) and remainder
+}
+
+/// @brief Performs two's complement (bitwise negation + manual addition of 1).
+/// @param bitvector The BitVector to work with.
+/// @return A reference to the modified BitVector.
+template <std::size_t N>
+inline auto two_complement(BitVector<N> &bitvector) -> BitVector<N> &
+{
+    // Invert all bits (bitwise negation).
+    bitvector.flip();
+    // Add 1 using sum_inplace, which will handle the carry propagation. We
+    // create a temporary BitVector representing the number 1 to add to the
+    // inverted bits.
+    BitVector<N> one;
+    // Set the least significant bit to 1, effectively adding 1.
+    one[0] = true;
+    // Use sum_inplace to add 1 to the BitVector.
+    bvlib::detail::sum_inplace(bitvector, one);
+    return bitvector;
 }
 
 } // namespace detail

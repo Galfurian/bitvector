@@ -1,6 +1,8 @@
 /// @file bitvector.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief Base bitvector class.
+/// @copyright Copyright (c) 2024-2025 Enrico Fraccaroli <enry.frak@gmail.com>
+/// Licensed under the MIT License. See LICENSE.md file root for details.
 
 #pragma once
 
@@ -18,9 +20,11 @@ enum : unsigned char {
     BVLIB_MICRO_VERSION = 0  ///< Micro version of the library.
 };
 
+/// @brief Contains the BitVector class.
 namespace bvlib
 {
 
+/// @brief Contains support classes and functions.
 namespace detail
 {
 
@@ -32,27 +36,8 @@ inline auto popcount(T x) -> std::size_t
 {
     std::size_t count = 0;
     while (x) {
-        x &= (x - 1); // Clears the lowest set bit
-        count++;
-    }
-    return count;
-}
-
-/// @brief Counts the number of leading zeros in a 32-bit integer.
-/// @param x The input number.
-/// @return The number of leading zeros.
-template <typename T>
-inline auto count_leading_zeros(T x) -> std::size_t
-{
-    // Special case: all bits are zero.
-    if (x == 0) {
-        // Return the bit-width of T (based on CHAR_BIT).
-        return sizeof(T) * CHAR_BIT;
-    }
-    std::size_t count = 0;
-    // Mask to check the most significant bit.
-    for (unsigned long mask = static_cast<unsigned long>(1) << (sizeof(T) * CHAR_BIT - 1); (x & mask) == 0;
-         mask >>= 1) {
+        // Clears the lowest set bit.
+        x &= (x - 1);
         count++;
     }
     return count;
@@ -204,18 +189,25 @@ public:
         }
     }
 
-    // Copy constructor
+    /// @brief Copy constructor.
+    /// @param other The other instance to copy.
     BitVector(const BitVector &other) = default;
 
-    // Copy assignment operator
+    /// @brief Copy assignment operator.
+    /// @param other The other instance to copy.
+    /// @return A reference to this instance.
     auto operator=(const BitVector &other) -> BitVector & = default;
 
-    // Move constructor
+    /// @brief Move constructor.
+    /// @param other The other instance to move.
     BitVector(BitVector &&other) noexcept = default;
 
-    // Move assignment operator
+    /// @brief Move assignment operator.
+    /// @param other The other instance to move.
+    /// @return A reference to this instance.
     auto operator=(BitVector &&other) noexcept -> BitVector & = default;
 
+    /// @brief Virtual destructor.
     virtual ~BitVector() = default;
 
     /// @brief Returns a bitvector of all ones.
@@ -223,7 +215,8 @@ public:
     static auto ones() -> BitVector<N>
     {
         BitVector<N> result;
-        result.data.fill(~BlockType(0)); // Set all bits to 1
+        // Set all bits to 1.
+        result.data.fill(~BlockType(0));
         result.trim();
         return result;
     }
@@ -249,7 +242,7 @@ public:
     auto set(std::size_t pos) -> BitVector<N> &
     {
         if (pos >= N) {
-            throw std::out_of_range("Bit position out of range");
+            throw std::out_of_range("Bit position out of range.");
         }
         data[pos / BitsPerBlock] |= (BlockType(1) << (pos % BitsPerBlock));
         return *this;
@@ -290,29 +283,6 @@ public:
         return reset(N - 1);
     }
 
-    /// @brief Toggles a bit at a given position.
-    /// @param pos The position to toggle.
-    /// @return A reference to the modified BitVector.
-    auto toggle(std::size_t pos) -> BitVector<N> &
-    {
-        if (pos >= N) {
-            throw std::out_of_range("BitVector index out of range");
-        }
-        data[pos / BitsPerBlock] ^= (BlockType(1) << (pos % BitsPerBlock));
-        return *this;
-    }
-
-    /// @brief Gets the value of a bit at a given position.
-    /// @param pos The position to check.
-    /// @return true if the bit is set, false otherwise.
-    auto get(std::size_t pos) const -> bool
-    {
-        if (pos >= N) {
-            throw std::out_of_range("BitVector index out of range");
-        }
-        return (data[pos / BitsPerBlock] & (BlockType(1) << (pos % BitsPerBlock))) != 0;
-    }
-
     /// @brief Flips every bit.
     /// @return A reference to the modified BitVector.
     auto flip() -> BitVector<N> &
@@ -340,11 +310,10 @@ public:
     /// @return A reference to the modified BitVector.
     auto trim() -> BitVector<N> &
     {
-        constexpr std::size_t extraBits = (NumBlocks * BitsPerBlock) - N;
+        constexpr std::size_t extra_bits = (NumBlocks * BitsPerBlock) - N;
         // Ensure no invalid shifts.
-        if constexpr (extraBits > 0 && NumBlocks > 0) {
-            constexpr BlockType mask = (BlockType(1) << (BitsPerBlock - extraBits)) - 1;
-            data[NumBlocks - 1] &= mask;
+        if constexpr (extra_bits > 0 && NumBlocks > 0) {
+            data[NumBlocks - 1] &= ((BlockType(1) << (BitsPerBlock - extra_bits)) - 1);
         }
         return *this;
     }
@@ -375,13 +344,13 @@ public:
             }
         }
         // For the last block, handle excess bits.
-        const std::size_t extraBits = (NumBlocks * BitsPerBlock) - N;
-        if (extraBits == 0 || (data[NumBlocks - 1] == ~BlockType(0))) {
+        const std::size_t extra_bits = (NumBlocks * BitsPerBlock) - N;
+        if (extra_bits == 0 || (data[NumBlocks - 1] == ~BlockType(0))) {
             return true;
         }
 
         // Create a mask for the last block's valid bits and check.
-        BlockType mask = (BlockType(1) << (BitsPerBlock - extraBits)) - 1;
+        BlockType mask = (BlockType(1) << (BitsPerBlock - extra_bits)) - 1;
         return (data[NumBlocks - 1] & mask) == mask;
     }
 
@@ -406,32 +375,7 @@ public:
     auto sign() const -> bool
     {
         // Check the most significant bit (MSB).
-        return get(N - 1);
-    }
-
-    /// @brief Performs two's complement (bitwise negation + manual addition).
-    /// @return A reference to the modified BitVector.
-    auto two_complement() -> BitVector<N> &
-    {
-        flip(); // Invert all bits (bitwise negation)
-
-        // Manually add 1 using bitwise logic.
-        // Initial carry (since we're adding 1).
-        bool carry = true;
-        for (std::size_t i = 0; i < NumBlocks; ++i) {
-            if (carry) {
-                if (data[i] == ~BlockType(0)) {
-                    // Overflow, propagate carry.
-                    data[i] = 0;
-                } else {
-                    data[i] += 1;
-                    // No more carry needed.
-                    carry = false;
-                }
-            }
-        }
-
-        return *this;
+        return at(N - 1);
     }
 
     /// @brief Swaps two bits at the given positions.
@@ -444,8 +388,8 @@ public:
             if ((lhs >= N) || (rhs >= N)) {
                 throw std::out_of_range("BitVector index out of range");
             }
-            bool bit_lhs = get(lhs);
-            bool bit_rhs = get(rhs);
+            bool bit_lhs = at(lhs);
+            bool bit_rhs = at(rhs);
             // Swap the bits if they differ.
             if (bit_lhs != bit_rhs) {
                 if (bit_lhs) {
@@ -490,7 +434,7 @@ public:
         reset(); // Clear all bits before copying
         std::size_t min_size = std::min(N, N2);
         for (std::size_t i = 0; i < min_size; ++i) {
-            if (rhs.get(i)) {
+            if (rhs.at(i)) {
                 set(i); // Set bit if rhs[i] is 1
             }
         }
@@ -507,7 +451,7 @@ public:
         reset(); // Clear all bits before copying
         std::size_t min_size = std::min(N, N2);
         for (std::size_t i = 0; i < min_size; ++i) {
-            if (rhs.get(N2 - i - 1)) {
+            if (rhs.at(N2 - i - 1)) {
                 set(N - i - 1); // Set bit if rhs[N2 - i - 1] is 1
             }
         }
@@ -610,7 +554,7 @@ public:
         static_assert(std::is_integral<T>::value, "T must be an integral type");
         T result = 0;
         for (std::size_t i = 0; i < N; ++i) {
-            if (get(i)) {
+            if (at(i)) {
                 result |= (T(1) << i);
             }
         }
@@ -630,7 +574,7 @@ public:
     {
         std::string str;
         for (std::size_t i = 0; i < N; ++i) {
-            str.push_back(get(N - 1 - i) ? '1' : '0');
+            str.push_back(at(N - 1 - i) ? '1' : '0');
         }
         return str;
     }
