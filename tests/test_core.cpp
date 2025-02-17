@@ -30,7 +30,7 @@ void test_integer_constructor_zero()
 void test_integer_constructor_small_value()
 {
     bvlib::BitVector<8> bv(5);
-    assert(bv.to_string() == "00000101" && "Integer constructor failed to initialize correctly from 5");
+    assert((bv.to_string() == "00000101") && "Integer constructor failed to initialize correctly from 5");
 }
 
 /// @brief Tests construction from a large integer value.
@@ -44,7 +44,7 @@ void test_integer_constructor_large_value()
 void test_integer_constructor_overflow()
 {
     bvlib::BitVector<8> bv(1023); // 1023 = 11 1111 1111 (truncated)
-    assert(bv.to_string() == "11111111" && "Integer constructor should truncate overflowing bits");
+    assert((bv.to_string() == "11111111") && "Integer constructor should truncate overflowing bits");
 }
 
 // ============================================================================
@@ -86,7 +86,7 @@ void test_string_constructor_invalid_chars()
         bvlib::BitVector<8> bv("11012"); // Should fail due to '2'
         assert(false && "String constructor should throw on invalid characters");
     } catch (const std::invalid_argument &) {
-        // Expected behavior
+        // Expected behavior.
     }
 }
 
@@ -636,7 +636,7 @@ void test_assign_exceeds_32bit_smaller_to_larger()
     bvlib::BitVector<64> bv2("0000000000000000000000000000000000000000000000000000000000000000");
     bv2.assign(bv1);
     assert(
-        bv2.to_string().substr(48) == "1111000011110000" &&
+        (bv2.to_string().substr(48) == "1111000011110000") &&
         "assign() failed from <16> to <64>, bits not placed correctly in the lower portion");
 }
 
@@ -646,9 +646,8 @@ void test_assign_exceeds_32bit_larger_to_smaller()
     bvlib::BitVector<16> bv2("0000000000000000");
     bv2.assign(bv1);
     assert(
-        bv2.to_string() == "0000000000000000" /* at first glance */ ||
-        bv2.to_string() == "1111000000000000" /* or depends if lower bits were set */ &&
-            "assign() failed from <64> to <16>, check if bits are copied correctly");
+        (bv2.to_string() == "0000000000000000" || bv2.to_string() == "1111000000000000") &&
+        "assign() failed from <64> to <16>, check if bits are copied correctly");
 }
 
 // ============================================================================
@@ -660,7 +659,7 @@ void test_rassign_same_size()
     bvlib::BitVector<8> bv1("10101010");
     bvlib::BitVector<8> bv2("00000000");
     bv2.rassign(bv1);
-    assert(bv2.to_string() == "10101010" && "rassign() failed for same-size BitVector<8>");
+    assert((bv2.to_string() == "10101010") && "rassign() failed for same-size BitVector<8>");
 }
 
 void test_rassign_smaller_to_larger()

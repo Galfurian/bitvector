@@ -466,7 +466,7 @@ void test_operator_divide_bitvector_and_zero()
         int value   = 0;
         auto result = bv / value;
         assert(false && "Dividing by zero should throw an exception.");
-    } catch (const std::domain_error &e) {
+    } catch (const std::domain_error &) {
         assert(true && "Division by zero correctly throws an exception.");
     }
 }
@@ -479,7 +479,7 @@ void test_operator_divide_integer_and_zero()
         bvlib::BitVector<8> bv("00000000"); // 0 in decimal
         auto result = value / bv;
         assert(false && "Dividing by zero should throw an exception.");
-    } catch (const std::domain_error &e) {
+    } catch (const std::domain_error &) {
         assert(true && "Division by zero correctly throws an exception.");
     }
 }
