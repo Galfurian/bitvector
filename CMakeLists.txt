@@ -155,6 +155,10 @@ if(BUILD_TESTS)
     add_executable(${PROJECT_NAME}_test_math ${PROJECT_SOURCE_DIR}/tests/test_math.cpp)
     target_link_libraries(${PROJECT_NAME}_test_math ${PROJECT_NAME})
     add_test(${PROJECT_NAME}_test_math_run ${PROJECT_NAME}_test_math)
+
+    add_executable(${PROJECT_NAME}_test_bitwise ${PROJECT_SOURCE_DIR}/tests/test_bitwise.cpp)
+    target_link_libraries(${PROJECT_NAME}_test_bitwise ${PROJECT_NAME})
+    add_test(${PROJECT_NAME}_test_bitwise_run ${PROJECT_NAME}_test_bitwise)
     
 endif()
 

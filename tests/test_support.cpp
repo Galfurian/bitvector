@@ -49,10 +49,10 @@ void test_most_significant_bit()
 
 int main()
 {
-    std::cout << "Running all function tests." << std::endl;
+    std::cout << "Running all function tests.\n";
 
     test_most_significant_bit();
 
-    std::cout << "✅ All function tests passed!" << std::endl;
+    std::cout << "✅ All function tests passed!\n";
     return 0;
 }

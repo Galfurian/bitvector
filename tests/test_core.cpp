@@ -866,7 +866,7 @@ void run_all_trim_tests()
     test_trim_minimal_size();
     test_trim_no_op_on_already_trimmed_vector();
 
-    std::cout << "    ✅ All trim tests passed!" << std::endl;
+    std::cout << "    ✅ All trim tests passed!\n";
 }
 
 /// @brief Runs all tests for `count()`, `all()`, `any()`, `none()`, and `sign()`.
@@ -878,7 +878,7 @@ void run_all_check_functions()
     test_none();
     test_sign();
 
-    std::cout << "    ✅ All count/all/any/none/sign tests passed!" << std::endl;
+    std::cout << "    ✅ All count/all/any/none/sign tests passed!\n";
 }
 
 /// @brief Runs all tests for `swap()`.
@@ -889,7 +889,7 @@ void run_all_swap_tests()
     test_swap_range_small();
     test_swap_range_same_position();
 
-    std::cout << "    ✅ All swap tests completed!" << std::endl;
+    std::cout << "    ✅ All swap tests completed!\n";
 }
 
 void run_all_assign_rassign_tests()
@@ -924,7 +924,7 @@ void run_all_at_tests()
 }
 int main()
 {
-    std::cout << "Running all standard function tests." << std::endl;
+    std::cout << "Running all standard function tests.\n";
 
     run_constructor_tests();
     run_ones_zeros_tests();
@@ -935,6 +935,6 @@ int main()
     run_all_assign_rassign_tests();
     run_all_at_tests();
 
-    std::cout << "✅ All standard function tests passed!" << std::endl;
+    std::cout << "✅ All standard function tests passed!\n";
     return 0;
 }

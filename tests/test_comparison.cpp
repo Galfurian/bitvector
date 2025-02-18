@@ -541,13 +541,13 @@ void run_operator_greater_than_all_tests()
 
 int main()
 {
-    std::cout << "Running all function tests." << std::endl;
+    std::cout << "Running all function tests.\n";
 
     run_operator_equal_all_tests();
     run_operator_not_equal_all_tests();
     run_operator_less_than_all_tests();
     run_operator_greater_than_all_tests();
 
-    std::cout << "✅ All function tests passed!" << std::endl;
+    std::cout << "✅ All function tests passed!\n";
     return 0;
 }

@@ -713,7 +713,7 @@ void run_divide_equal_tests()
 
 int main()
 {
-    std::cout << "Running all function tests." << std::endl;
+    std::cout << "Running all function tests.\n";
 
     run_sum_tests();
     run_sum_equal_tests();
@@ -729,6 +729,6 @@ int main()
     run_division_tests();
     run_divide_equal_tests();
 
-    std::cout << "✅ All function tests passed!" << std::endl;
+    std::cout << "✅ All function tests passed!\n";
     return 0;
 }

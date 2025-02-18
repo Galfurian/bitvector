@@ -139,6 +139,9 @@ public:
     /// will store multiple bits per block for efficient operations.
     using BlockType = typename detail::BlockTypeHelper<N>::type;
 
+    /// @brief Number of stored bits.
+    static constexpr std::size_t NumBits = N;
+
     /// @brief Number of bits per block.
     /// @details This is calculated as the size of the block type in bits, using
     /// `sizeof(BlockType) * CHAR_BIT` to support different sizes of

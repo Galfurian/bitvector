@@ -209,7 +209,7 @@ void test_shift_right()
 
 int main()
 {
-    std::cout << "Running all function tests." << std::endl;
+    std::cout << "Running all function tests.\n";
 
     test_shift_left();
     std::cout << "    ✅ All `shift_left` tests completed!\n";
@@ -217,6 +217,6 @@ int main()
     test_shift_right();
     std::cout << "    ✅ All `shift_right` tests completed!\n";
 
-    std::cout << "✅ All function tests passed!" << std::endl;
+    std::cout << "✅ All function tests passed!\n";
     return 0;
 }
