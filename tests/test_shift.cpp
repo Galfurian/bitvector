@@ -53,7 +53,6 @@ void test_shift_left()
     bvlib::BitVector<16> bv16_1("1100110011001100");
     bv16_1 = bvlib::detail::shift_left(bv16_1, 1);
     assert(bv16_1.to_string() == "1001100110011000" && "Shift left by 1 should shift bits left and add 0");
-
     // Test case 3: Shift by 15
     bvlib::BitVector<16> bv16_2("1100110011001101");
     bv16_2 = bvlib::detail::shift_left(bv16_2, 15);
