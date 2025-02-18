@@ -203,22 +203,24 @@ inline void shift_within_blocks(BitVector<N> &bv, std::size_t bit_shift)
     constexpr auto NumBlocks    = BitVector<N>::NumBlocks;
     constexpr auto BitsPerBlock = static_cast<BlockType>(BitVector<N>::BitsPerBlock);
     if (bit_shift) {
+        // Precompute the wrap bits once.
+        const auto wrap_bits = BitsPerBlock - bit_shift;
         if constexpr (direction < 0) {
-            // Left shift within blocks
+            // Left shift within blocks.
             for (std::size_t i = NumBlocks - 1; i > 0; --i) {
-                // Shift current block left, and wrap bits from the previous block
-                bv.data[i] = (bv.data[i] << bit_shift) | (bv.data[i - 1] >> (BitsPerBlock - bit_shift));
+                // Shift current block left, and wrap bits from the previous block.
+                bv.data[i] = static_cast<BlockType>((bv.data[i] << bit_shift) | (bv.data[i - 1] >> wrap_bits));
             }
-            // Handle the first block (no previous block to wrap bits from)
-            bv.data[0] <<= bit_shift;
+            // Handle the first block (no previous block to wrap bits from).
+            bv.data[0] = static_cast<BlockType>(bv.data[0] << bit_shift);
         } else if constexpr (direction > 0) {
-            // Right shift within blocks
+            // Right shift within blocks.
             for (std::size_t i = 0; i < NumBlocks - 1; ++i) {
-                // Shift current block right, and wrap bits from the next block
-                bv.data[i] = (bv.data[i] >> bit_shift) | (bv.data[i + 1] << (BitsPerBlock - bit_shift));
+                // Shift current block right, and wrap bits from the next block.
+                bv.data[i] = static_cast<BlockType>((bv.data[i] >> bit_shift) | (bv.data[i + 1] << wrap_bits));
             }
-            // Handle the last block (no next block to wrap bits from)
-            bv.data[NumBlocks - 1] >>= bit_shift;
+            // Handle the last block (no next block to wrap bits from).
+            bv.data[NumBlocks - 1] = static_cast<BlockType>(bv.data[NumBlocks - 1] >> bit_shift);
         }
     }
 }
