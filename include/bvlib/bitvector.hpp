@@ -49,7 +49,7 @@ inline auto popcount(T x) -> std::size_t
 /// @param N The size of the BitVector in bits.
 template <std::size_t N>
 struct BlockTypeHelper {
-    // Determine the smallest unsigned integer type that can store N bits.
+    /// Determine the smallest unsigned integer type that can store N bits.
     using type = std::conditional_t<
         (N <= 8),
         std::uint8_t, // 8-bit
@@ -282,7 +282,13 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Bit position out of range.");
         }
-        data[pos / BitsPerBlock] |= static_cast<BlockType>(BlockType(1) << (pos % BitsPerBlock));
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Set the bit at the calculated position.
+        data[block] |= static_cast<BlockType>(BlockType(1) << bit);
+
         return *this;
     }
 
@@ -304,8 +310,12 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Bit position out of range");
         }
-        // Ensure same indexing as `set(pos)`
-        data[pos / BitsPerBlock] = static_cast<BlockType>(data[pos / BitsPerBlock] & ~(1U << (pos % BitsPerBlock)));
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Reset the bit at the calculated position.
+        data[block] = static_cast<BlockType>(data[block] & ~(1U << bit));
         return *this;
     }
 
@@ -341,7 +351,12 @@ public:
         if (pos >= N) {
             throw std::out_of_range("BitVector index out of range");
         }
-        data[pos / BitsPerBlock] = static_cast<BlockType>(data[pos / BitsPerBlock] ^ (1 << (pos % BitsPerBlock)));
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Flip the bit at the calculated position.
+        data[block] = static_cast<BlockType>(data[block] ^ (1 << bit));
         return *this;
     }
 
@@ -505,7 +520,12 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Accessing values outside bitvector");
         }
-        return (data[pos / BitsPerBlock] & (BlockType(1) << (pos % BitsPerBlock))) != 0;
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Return the bit at the calculated position.
+        return (data[block] & (BlockType(1) << bit)) != 0;
     }
 
     /// @brief Returns a modifiable reference-like proxy to a bit.
@@ -516,7 +536,12 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Accessing values outside bitvector");
         }
-        return detail::BitReference<BlockType>(data[pos / BitsPerBlock], pos % BitsPerBlock);
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Return the bit reference at the calculated position.
+        return detail::BitReference<BlockType>(data[block], bit);
     }
 
     /// @brief Copies the contents of the provided BitVector into this BitVector.
@@ -617,6 +642,7 @@ public:
     }
 
     /// @brief Converts the BitVector to a string.
+    /// @param split if true, it will add spaces between blocks based on BitsPerBlock.
     /// @return The binary string representing the bitvector.
     auto to_string(bool split = false) const -> std::string
     {
@@ -629,6 +655,16 @@ public:
         }
         return str;
     }
+
+    /// @brief Gets the block index for a given bit position.
+    /// @param pos The bit position in the BitVector.
+    /// @return The index of the block containing the bit.
+    inline std::size_t get_block_index(std::size_t pos) const { return pos / BitsPerBlock; }
+
+    /// @brief Gets the bit position within a block for a given bit position.
+    /// @param pos The bit position in the BitVector.
+    /// @return The position of the bit within its block.
+    inline std::size_t get_bit_position(std::size_t pos) const { return pos % BitsPerBlock; }
 };
 
 } // namespace bvlib

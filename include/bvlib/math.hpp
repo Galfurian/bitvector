@@ -127,43 +127,6 @@ inline auto subtract_block(BlockType lhs_block, BlockType rhs_block, bool &borro
     return lhs_block;
 }
 
-/// @brief Rotates the bits of the BitVector to the right by a given number of positions, modifying the current BitVector.
-/// @param n The number of positions to rotate to the right.
-/// @return A reference to the modified BitVector.
-template <std::size_t N>
-inline BitVector<N> &rotate_right_inplace(BitVector<N> &bv, std::size_t n)
-{
-    // Normalize the number of positions to prevent unnecessary rotations.
-    n %= N;
-    // No need to rotate if n is zero
-    if (n == 0) {
-        return bv;
-    }
-    // Perform the right rotation using a temporary variable for the bitwise
-    // operation.
-    for (std::size_t i = 0; i < N; ++i) {
-        std::size_t new_pos = (i + N - n) % N;
-        if (bv.at(i)) {
-            bv.set(new_pos);
-        } else {
-            bv.reset(new_pos);
-        }
-    }
-    return bv;
-}
-
-/// @brief Rotates the bits of the BitVector to the right by a given number of positions.
-/// @param bv The BitVector to rotate.
-/// @param n The number of positions to rotate to the right.
-/// @return A new BitVector with bits rotated to the right.
-template <std::size_t N>
-inline BitVector<N> rotate_right(const BitVector<N> &bv, std::size_t n)
-{
-    // Create a copy to avoid modifying the original BitVector.
-    BitVector<N> result = bv;
-    return detail::rotate_right_inplace(result, n);
-}
-
 /// @brief Shifts full blocks of a BitVector to the right or left.
 /// @tparam direction The direction to shift: positive for right shift, negative for left shift.
 /// @param bv The BitVector to shift.
@@ -245,9 +208,9 @@ inline auto shift_left_inplace(BitVector<N> &bitvector, std::size_t shift) -> Bi
         return bitvector;
     }
     // Shift full blocks to the left, passing -1 for left shift.
-    detail::shift_full_blocks<-1>(bitvector, shift / BitVector<N>::BitsPerBlock);
+    detail::shift_full_blocks<-1>(bitvector, bitvector.get_block_index(shift));
     // Shift bits within blocks, passing -1 for left shift.
-    detail::shift_within_blocks<-1>(bitvector, shift % BitVector<N>::BitsPerBlock);
+    detail::shift_within_blocks<-1>(bitvector, bitvector.get_bit_position(shift));
     // Ensure extra bits beyond N are cleared.
     bitvector.trim();
     return bitvector;
@@ -270,9 +233,9 @@ inline auto shift_right_inplace(BitVector<N> &bitvector, std::size_t shift) -> B
         return bitvector;
     }
     // Shift full blocks to the right, passing +1 for right shift.
-    detail::shift_full_blocks<+1>(bitvector, shift / BitVector<N>::BitsPerBlock);
+    detail::shift_full_blocks<+1>(bitvector, bitvector.get_block_index(shift));
     // Shift bits within blocks, passing +1 for right shift.
-    detail::shift_within_blocks<+1>(bitvector, shift % BitVector<N>::BitsPerBlock);
+    detail::shift_within_blocks<+1>(bitvector, bitvector.get_bit_position(shift));
     return bitvector;
 }
 
