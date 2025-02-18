@@ -38,7 +38,7 @@ inline auto popcount(T x) -> std::size_t
     std::size_t count = 0;
     while (x) {
         // Clears the lowest set bit.
-        x &= (x - 1);
+        x = static_cast<T>(x & (x - 1));
         count++;
     }
     return count;
@@ -118,7 +118,7 @@ public:
             block |= static_cast<BlockType>(BlockType(1) << position);
         } else {
             // Clear the bit.
-            block &= ~static_cast<BlockType>(BlockType(1) << position);
+            block &= static_cast<BlockType>(~(BlockType(1) << position));
         }
         return *this;
     }
@@ -282,11 +282,12 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Bit position out of range.");
         }
-        data[pos / BitsPerBlock] |= (BlockType(1) << (pos % BitsPerBlock));
+        data[pos / BitsPerBlock] |= static_cast<BlockType>(BlockType(1) << (pos % BitsPerBlock));
         return *this;
     }
 
-    /// @brief Sets every bit to false.
+    /// @brief Sets every bit to false.+
+
     /// @return A reference to the modified BitVector.
     auto reset() -> BitVector<N> &
     {
@@ -304,7 +305,7 @@ public:
             throw std::out_of_range("Bit position out of range");
         }
         // Ensure same indexing as `set(pos)`
-        data[pos / BitsPerBlock] &= ~static_cast<BlockType>(1U << (pos % BitsPerBlock));
+        data[pos / BitsPerBlock] = static_cast<BlockType>(data[pos / BitsPerBlock] & ~(1U << (pos % BitsPerBlock)));
         return *this;
     }
 
@@ -326,7 +327,7 @@ public:
     auto flip() -> BitVector<N> &
     {
         for (auto &block : data) {
-            block = ~block;
+            block = static_cast<BlockType>(~block);
         }
         trim();
         return *this;
@@ -340,7 +341,7 @@ public:
         if (pos >= N) {
             throw std::out_of_range("BitVector index out of range");
         }
-        data[pos / BitsPerBlock] ^= (BlockType(1) << (pos % BitsPerBlock));
+        data[pos / BitsPerBlock] = static_cast<BlockType>(data[pos / BitsPerBlock] ^ (1 << (pos % BitsPerBlock)));
         return *this;
     }
 

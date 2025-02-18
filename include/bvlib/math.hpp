@@ -66,9 +66,9 @@ template <typename BlockType>
 inline auto add_block_inplace(BlockType &lhs_block, BlockType rhs_block, bool &carry) -> BlockType &
 {
     // Add the rhs block and the carry to the lhs block directly.
-    lhs_block += static_cast<BlockType>(rhs_block + carry);
+    lhs_block = static_cast<BlockType>(lhs_block + rhs_block + carry);
     // Update the carry: If the result of addition overflows, set carry to 1, else 0.
-    carry = lhs_block < rhs_block;
+    carry     = lhs_block < rhs_block;
     // Return A reference to the first block.
     return lhs_block;
 }
@@ -82,9 +82,9 @@ template <typename BlockType>
 inline auto add_block(BlockType lhs_block, BlockType rhs_block, bool &carry) -> BlockType
 {
     // Add the rhs block and the carry to the lhs block directly.
-    lhs_block += static_cast<BlockType>(rhs_block + carry);
+    lhs_block = static_cast<BlockType>(lhs_block + rhs_block + carry);
     // Update the carry: If the result of addition overflows, set carry to 1, else 0.
-    carry = lhs_block < rhs_block;
+    carry     = lhs_block < rhs_block;
     // Return A reference to the first block.
     return lhs_block;
 }
@@ -101,9 +101,9 @@ inline auto subtract_block_inplace(BlockType &lhs_block, BlockType rhs_block, bo
     // borrow will be set to true.
     bool new_borrow = (lhs_block < (rhs_block + borrow));
     // Perform the subtraction with the borrow.
-    lhs_block -= static_cast<BlockType>(rhs_block + borrow);
+    lhs_block       = static_cast<BlockType>(lhs_block - rhs_block - borrow);
     // Update the borrow value.
-    borrow = new_borrow;
+    borrow          = new_borrow;
     // Return a reference to the modified lhs_block.
     return lhs_block;
 }
@@ -116,12 +116,15 @@ inline auto subtract_block_inplace(BlockType &lhs_block, BlockType rhs_block, bo
 template <typename BlockType>
 inline auto subtract_block(BlockType lhs_block, BlockType rhs_block, bool &borrow) -> BlockType
 {
-    // Perform the subtraction with the borrow from the previous block.
-    auto result = static_cast<BlockType>(lhs_block - rhs_block - borrow);
-    // Set the borrow: If the result of subtraction is negative, set borrow to 1, else 0.
-    borrow      = (lhs_block < (rhs_block + borrow));
-    // Return the result of the subtraction.
-    return result;
+    // Precompute the borrow: If lhs_block is smaller than rhs_block + borrow,
+    // borrow will be set to true.
+    bool new_borrow = (lhs_block < (rhs_block + borrow));
+    // Perform the subtraction with the borrow.
+    lhs_block       = static_cast<BlockType>(lhs_block - rhs_block - borrow);
+    // Update the borrow value.
+    borrow          = new_borrow;
+    // Return a reference to the modified lhs_block.
+    return lhs_block;
 }
 
 /// @brief Rotates the bits of the BitVector to the right by a given number of positions, modifying the current BitVector.
@@ -330,9 +333,8 @@ inline auto sum(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector
 template <std::size_t N1, std::size_t N2>
 inline auto sum_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
-    using ResultType                = BitVector<N1>;
-    using BlockType                 = typename ResultType::BlockType;
-    constexpr std::size_t NumBlocks = ResultType::NumBlocks;
+    using BlockType                 = typename BitVector<N1>::BlockType;
+    constexpr std::size_t NumBlocks = BitVector<N1>::NumBlocks;
     // Keep track of the carry.
     bool carry                      = false;
     // Iterate block-wise for efficient addition.
