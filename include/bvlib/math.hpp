@@ -636,6 +636,26 @@ inline auto operator==(T lhs, const BitVector<N> &rhs) -> bool
     return BitVector<N>(lhs) == rhs;
 }
 
+/// @brief Checks equality between a BitVector and a binary string.
+/// @param lhs The BitVector.
+/// @param rhs The binary string.
+/// @return True if they are equal, false otherwise.
+template <std::size_t N>
+inline auto operator==(const BitVector<N> &lhs, const std::string &rhs) -> bool
+{
+    return lhs.to_string() == rhs;
+}
+
+/// @brief Checks equality between a binary string and a BitVector.
+/// @param lhs The binary string.
+/// @param rhs The BitVector.
+/// @return True if they are equal, false otherwise.
+template <std::size_t N>
+inline auto operator==(const std::string &lhs, const BitVector<N> &rhs) -> bool
+{
+    return lhs == rhs.to_string();
+}
+
 // ============================================================================
 // BOOL (!=)
 // ============================================================================
@@ -668,6 +688,26 @@ template <std::size_t N, typename T, typename = typename std::enable_if<std::is_
 inline auto operator!=(T lhs, const BitVector<N> &rhs) -> bool
 {
     return !(lhs == rhs);
+}
+
+/// @brief Checks inequality between a BitVector and a binary string.
+/// @param lhs The BitVector.
+/// @param rhs The binary string.
+/// @return True if they are not equal, false otherwise.
+template <std::size_t N>
+inline auto operator!=(const BitVector<N> &lhs, const std::string &rhs) -> bool
+{
+    return lhs.to_string() != rhs;
+}
+
+/// @brief Checks inequality between a binary string and a BitVector.
+/// @param lhs The binary string.
+/// @param rhs The BitVector.
+/// @return True if they are not equal, false otherwise.
+template <std::size_t N>
+inline auto operator!=(const std::string &lhs, const BitVector<N> &rhs) -> bool
+{
+    return lhs != rhs.to_string();
 }
 
 // ============================================================================
