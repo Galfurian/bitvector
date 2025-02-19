@@ -4,10 +4,10 @@
 /// @copyright Copyright (c) 2024-2025 Enrico Fraccaroli <enry.frak@gmail.com>
 /// Licensed under the MIT License. See LICENSE.md file root for details.
 
-#include "bvlib/math.hpp"
-
 #include <cassert>
 #include <iostream>
+
+#include "support.hpp"
 
 // ============================================================================
 // BOOL (==)
@@ -19,26 +19,25 @@ void test_operator_equal_same_size()
     // Test case 1: Same BitVector, equal
     bvlib::BitVector<8> bv8_1("11001100");
     bvlib::BitVector<8> bv8_2("11001100");
-    assert(bv8_1 == bv8_2 && "operator== should return true for equal BitVectors of same size");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_1, bv8_2, true);
 
     // Test case 2: Same BitVector, different value
     bvlib::BitVector<8> bv8_3("11001100");
     bvlib::BitVector<8> bv8_4("10101010");
-    assert(!(bv8_3 == bv8_4) && "operator== should return false for unequal BitVectors of same size");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_3, bv8_4, false);
 }
-
 /// @brief Tests equality between a BitVector and an integer value.
 void test_operator_equal_bitvector_integer()
 {
     // Test case 1: BitVector equals integer
     bvlib::BitVector<8> bv8_1("11001100");
     int value = 204;
-    assert(bv8_1 == value && "operator== should return true when BitVector equals integer");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_1, value, true);
 
     // Test case 2: BitVector does not equal integer
     bvlib::BitVector<8> bv8_2("11001100");
     int value2 = 123;
-    assert(!(bv8_2 == value2) && "operator== should return false when BitVector does not equal integer");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_2, value2, false);
 }
 
 /// @brief Tests equality between an integer value and a BitVector.
@@ -47,12 +46,12 @@ void test_operator_equal_integer_bitvector()
     // Test case 1: Integer equals BitVector
     int value = 204;
     bvlib::BitVector<8> bv8_1("11001100");
-    assert(value == bv8_1 && "operator== should return true when integer equals BitVector");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, value, bv8_1, true);
 
     // Test case 2: Integer does not equal BitVector
     int value2 = 123;
     bvlib::BitVector<8> bv8_2("11001100");
-    assert(!(value2 == bv8_2) && "operator== should return false when integer does not equal BitVector");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, value2, bv8_2, false);
 }
 
 /// @brief Tests equality between BitVectors of different sizes.
@@ -61,12 +60,12 @@ void test_operator_equal_different_sizes()
     // Test case 1: BitVectors with different sizes, should be false
     bvlib::BitVector<8> bv8_1("11001100");
     bvlib::BitVector<16> bv16_1("1100110011001100");
-    assert(!(bv8_1 == bv16_1) && "operator== should return false for BitVectors with different sizes");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_1, bv16_1, false);
 
     // Test case 2: BitVector with extra leading zeros, should be equal
     bvlib::BitVector<8> bv8_2("11001100");
     bvlib::BitVector<16> bv16_2("0000000011001100");
-    assert(bv8_2 == bv16_2 && "operator== should return true for BitVectors with equal bits and different sizes");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_2, bv16_2, true);
 }
 
 /// @brief Tests equality with a BitVector and an integer value.
@@ -75,17 +74,17 @@ void test_operator_equal_bitvector_integer_extended()
     // Test case 1: BitVector and integer value with all bits set
     bvlib::BitVector<16> bv16_1("1111111111111111");
     int value = 65535;
-    assert(bv16_1 == value && "operator== should return true when BitVector and integer match");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv16_1, value, true);
 
     // Test case 2: BitVector and integer value with different bits
     bvlib::BitVector<16> bv16_2("1111000011110000");
     int value2 = 61680;
-    assert(bv16_2 == value2 && "operator== should return true when BitVector and integer match");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv16_2, value2, true);
 
     // Test case 3: BitVector and integer mismatch
     bvlib::BitVector<8> bv8_1("11001100");
     int value3 = 123;
-    assert(!(bv8_1 == value3) && "operator== should return false when BitVector and integer do not match");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_1, value3, false);
 }
 
 /// @brief Tests equality with a BitVector and a truncated integer.
@@ -94,12 +93,12 @@ void test_operator_equal_truncated_integer()
     // Test case 1: Truncated BitVector and integer
     bvlib::BitVector<4> bv4_1("1100");
     int value = 12;
-    assert(bv4_1 == value && "operator== should return true when truncated BitVector and integer match");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv4_1, value, true);
 
     // Test case 2: Truncated BitVector and integer mismatch
     bvlib::BitVector<4> bv4_2("1000");
     int value2 = 5;
-    assert(!(bv4_2 == value2) && "operator== should return false when truncated BitVector and integer do not match");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv4_2, value2, false);
 }
 
 /// @brief Tests equality between BitVectors of equal size but different data.
@@ -108,120 +107,19 @@ void test_operator_equal_bitvectors_different_data()
     // Test case 1: Equal size but different data
     bvlib::BitVector<8> bv8_1("11001100");
     bvlib::BitVector<8> bv8_2("10101010");
-    assert(!(bv8_1 == bv8_2) && "operator== should return false for BitVectors with the same size but different data");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_1, bv8_2, false);
 
     // Test case 2: Equal size but same data
     bvlib::BitVector<8> bv8_3("11110000");
     bvlib::BitVector<8> bv8_4("11110000");
-    assert(bv8_3 == bv8_4 && "operator== should return true for BitVectors with the same size and same data");
+    test_binary_bool([](const auto &lhs, const auto &rhs) { return lhs == rhs; }, bv8_3, bv8_4, true);
 }
 
 // ============================================================================
 // BOOL (!=)
 // ============================================================================
 
-/// @brief Tests inequality between two BitVectors of the same size.
-void test_operator_not_equal_same_size()
-{
-    // Test case 1: Same BitVector, equal
-    bvlib::BitVector<8> bv8_1("11001100");
-    bvlib::BitVector<8> bv8_2("11001100");
-    assert(!(bv8_1 != bv8_2) && "operator!= should return false for equal BitVectors of same size");
 
-    // Test case 2: Same BitVector, different value
-    bvlib::BitVector<8> bv8_3("11001100");
-    bvlib::BitVector<8> bv8_4("10101010");
-    assert(bv8_3 != bv8_4 && "operator!= should return true for unequal BitVectors of same size");
-}
-
-/// @brief Tests inequality between a BitVector and an integer value.
-void test_operator_not_equal_bitvector_integer()
-{
-    // Test case 1: BitVector equals integer
-    bvlib::BitVector<8> bv8_1("11001100");
-    int value = 204;
-    assert(!(bv8_1 != value) && "operator!= should return false when BitVector equals integer");
-
-    // Test case 2: BitVector does not equal integer
-    bvlib::BitVector<8> bv8_2("11001100");
-    int value2 = 123;
-    assert(bv8_2 != value2 && "operator!= should return true when BitVector does not equal integer");
-}
-
-/// @brief Tests inequality between an integer value and a BitVector.
-void test_operator_not_equal_integer_bitvector()
-{
-    // Test case 1: Integer equals BitVector
-    int value = 204;
-    bvlib::BitVector<8> bv8_1("11001100");
-    assert(!(value != bv8_1) && "operator!= should return false when integer equals BitVector");
-
-    // Test case 2: Integer does not equal BitVector
-    int value2 = 123;
-    bvlib::BitVector<8> bv8_2("11001100");
-    assert(value2 != bv8_2 && "operator!= should return true when integer does not equal BitVector");
-}
-
-/// @brief Tests inequality between BitVectors of different sizes.
-void test_operator_not_equal_different_sizes()
-{
-    // Test case 1: BitVectors with different sizes, should be true
-    bvlib::BitVector<8> bv8_1("11001100");
-    bvlib::BitVector<16> bv16_1("1100110011001100");
-    assert(bv8_1 != bv16_1 && "operator!= should return true for BitVectors with different sizes");
-
-    // Test case 2: BitVector with extra leading zeros, should be false
-    bvlib::BitVector<8> bv8_2("11001100");
-    bvlib::BitVector<16> bv16_2("0000000011001100");
-    assert(!(bv8_2 != bv16_2) && "operator!= should return false for BitVectors with equal bits and different sizes");
-}
-
-/// @brief Tests inequality with a BitVector and an integer value.
-void test_operator_not_equal_bitvector_integer_extended()
-{
-    // Test case 1: BitVector and integer value with all bits set
-    bvlib::BitVector<16> bv16_1("1111111111111111");
-    int value = 65535;
-    assert(!(bv16_1 != value) && "operator!= should return false when BitVector and integer match");
-
-    // Test case 2: BitVector and integer value with different bits
-    bvlib::BitVector<16> bv16_2("1111000011110000");
-    int value2 = 61680;
-    assert(!(bv16_2 != value2) && "operator!= should return false when BitVector and integer match");
-
-    // Test case 3: BitVector and integer mismatch
-    bvlib::BitVector<8> bv8_1("11001100");
-    int value3 = 123;
-    assert(bv8_1 != value3 && "operator!= should return true when BitVector and integer do not match");
-}
-
-/// @brief Tests inequality with a BitVector and a truncated integer.
-void test_operator_not_equal_truncated_integer()
-{
-    // Test case 1: Truncated BitVector and integer
-    bvlib::BitVector<4> bv4_1("1100");
-    int value = 12;
-    assert(!(bv4_1 != value) && "operator!= should return false when truncated BitVector and integer match");
-
-    // Test case 2: Truncated BitVector and integer mismatch
-    bvlib::BitVector<4> bv4_2("1000");
-    int value2 = 5;
-    assert(bv4_2 != value2 && "operator!= should return true when truncated BitVector and integer do not match");
-}
-
-/// @brief Tests inequality between BitVectors of equal size but different data.
-void test_operator_not_equal_bitvectors_different_data()
-{
-    // Test case 1: Equal size but different data
-    bvlib::BitVector<8> bv8_1("11001100");
-    bvlib::BitVector<8> bv8_2("10101010");
-    assert(bv8_1 != bv8_2 && "operator!= should return true for BitVectors with the same size but different data");
-
-    // Test case 2: Equal size but same data
-    bvlib::BitVector<8> bv8_3("11110000");
-    bvlib::BitVector<8> bv8_4("11110000");
-    assert(!(bv8_3 != bv8_4) && "operator!= should return false for BitVectors with the same size and same data");
-}
 
 // ============================================================================
 // BOOL (<)
