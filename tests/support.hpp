@@ -63,6 +63,29 @@ void __test_unary(
     }
 }
 
+// Generic helper function for unary functions.
+template <typename ValueType, typename T, typename ResultType>
+void __test_value(
+    ValueType value,
+    T &bv,
+    const ResultType &expected_result,
+    const std::string filename,
+    int line,
+    const std::string function_str)
+{
+    // Check result and print error if it does not match the expected value.
+    if (value != expected_result) {
+        std::cout << "❌ Test failed.\n";
+        std::cout << "File     : " << filename << ":" << line << "\n";
+        std::cout << "Function : " << function_str << "\n";
+        std::cout << "Inputs : \n";
+        std::cout << "    bv   : " << std::setw(64) << std::right << bv << "\n";
+        std::cout << "Obtained : " << std::setw(64) << std::right << value << "\n";
+        std::cout << "Expected : " << std::setw(64) << std::right << expected_result << "\n\n";
+        std::exit(1);
+    }
+}
+
 // Helper macro to capture the test details, including the file, line, and test expression.
 #define test_binary(function, lhs, rhs, expected_result)                                                               \
     do {                                                                                                               \
