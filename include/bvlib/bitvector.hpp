@@ -547,6 +547,20 @@ public:
         return detail::BitReference<BlockType>(data[block], bit);
     }
 
+    // Slicing function that returns a new BitVector of the sliced bits.
+    template <std::size_t Start, std::size_t End>
+    BitVector<End - Start + 1> slice() const
+    {
+        static_assert(Start < End, "Start index must be less than End index.");
+        static_assert(End <= N, "End index must be within the size of the BitVector.");
+
+        BitVector<End - Start + 1> result;
+        for (std::size_t i = 0; i < End - Start + 1; ++i) {
+            result[i] = this->at(Start + i);
+        }
+        return result;
+    }
+
     /// @brief Copies the contents of the provided BitVector into this BitVector.
     /// @tparam N2 The size of the `rhs` BitVector.
     /// @param rhs The BitVector to copy from.

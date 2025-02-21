@@ -4,13 +4,6 @@
 /// @copyright Copyright (c) 2024-2025 Enrico Fraccaroli <enry.frak@gmail.com>
 /// Licensed under the MIT License. See LICENSE.md file root for details.
 
-#include <bitset>
-#include <cassert>
-#include <iostream>
-
-#include "bvlib/bitvector.hpp"
-#include "bvlib/io.hpp"
-
 #include "support.hpp"
 
 // ============================================================================
@@ -94,8 +87,8 @@ void test_string_constructor_invalid_chars()
     try {
         bvlib::BitVector<8> bv("11012"); // Should fail due to '2'
         assert(false && "String constructor should throw on invalid characters");
-    } catch (const std::invalid_argument &) {
-        // Expected behavior.
+    } catch (const std::invalid_argument &e) {
+        std::cerr << e.what() << "\n";
     }
 }
 
@@ -250,8 +243,8 @@ void test_set_out_of_range()
     try {
         bv.set(8); // Out of range
         assert(false && "set(n) should throw out_of_range for n >= size");
-    } catch (const std::out_of_range &) {
-        // Expected behavior
+    } catch (const std::out_of_range &e) {
+        std::cerr << e.what() << "\n";
     }
 }
 
@@ -293,8 +286,8 @@ void test_reset_out_of_range()
     try {
         bv.reset(8); // Out of range
         assert(false && "reset(n) should throw out_of_range for n >= size");
-    } catch (const std::out_of_range &) {
-        // Expected behavior
+    } catch (const std::out_of_range &e) {
+        std::cerr << e.what() << "\n";
     }
 }
 
@@ -329,8 +322,8 @@ void test_flip_out_of_range()
     try {
         bv.flip(8); // Out of range
         assert(false && "flip(n) should throw out_of_range for n >= size");
-    } catch (const std::out_of_range &) {
-        // Expected behavior
+    } catch (const std::out_of_range &e) {
+        std::cerr << e.what() << "\n";
     }
 }
 
@@ -653,14 +646,14 @@ void test_rassign_exceeds_32bit_larger_to_smaller()
 void test_at_read()
 {
     bvlib::BitVector<8> bv("10101010");
-    assert(bv.at(0) == false && "at() should return the correct value for bit 0");
-    assert(bv.at(1) == true && "at() should return the correct value for bit 1");
-    assert(bv.at(2) == false && "at() should return the correct value for bit 2");
-    assert(bv.at(3) == true && "at() should return the correct value for bit 3");
-    assert(bv.at(4) == false && "at() should return the correct value for bit 4");
-    assert(bv.at(5) == true && "at() should return the correct value for bit 5");
-    assert(bv.at(6) == false && "at() should return the correct value for bit 6");
-    assert(bv.at(7) == true && "at() should return the correct value for bit 7");
+    test_unary([](auto &value) { return value.at(0); }, bv, false);
+    test_unary([](auto &value) { return value.at(1); }, bv, true);
+    test_unary([](auto &value) { return value.at(2); }, bv, false);
+    test_unary([](auto &value) { return value.at(3); }, bv, true);
+    test_unary([](auto &value) { return value.at(4); }, bv, false);
+    test_unary([](auto &value) { return value.at(5); }, bv, true);
+    test_unary([](auto &value) { return value.at(6); }, bv, false);
+    test_unary([](auto &value) { return value.at(7); }, bv, true);
 }
 
 /// @brief Tests the `at()` function for modifying a bit.
@@ -673,16 +666,14 @@ void test_at_modify()
     bv.at(2) = true;  // Set   bit at position 2
     bv.at(3) = false; // Clear bit at position 3
 
-    assert(bv.to_string() == "10100101" && "at() should allow modifying the bit at position 0, 1, 2, and 3");
+    test_unary([](const auto &value) { return value.to_string(); }, bv, "10100101");
 
     bv.at(4) = true;  // Set   bit at position 4
     bv.at(5) = false; // Clear bit at position 5
     bv.at(6) = true;  // Set   bit at position 6
     bv.at(7) = false; // Clear bit at position 7
 
-    assert(
-        bv.to_string() == "01010101" &&
-        "at() should allow modifying the bit at position 4, 5, 6, and 7 back to original value");
+    test_unary([](const auto &value) { return value.to_string(); }, bv, "01010101");
 }
 
 /// @brief Tests the `at()` function when accessing out-of-range indices.
@@ -715,15 +706,13 @@ void test_at_modify_state()
     bv.at(3) = true;
     bv.at(5) = true;
     bv.at(7) = true;
-    assert(
-        bv.to_string() == "0000000010101010" &&
-        "at() should correctly modify specific bits at positions 1, 3, 5, and 7");
+    test_unary([](const auto &value) { return value.to_string(); }, bv, "0000000010101010");
 
     bv.at(15) = true; // Set MSB
-    assert(bv.to_string() == "1000000010101010" && "at() should correctly modify the MSB (bit 15)");
+    test_unary([](const auto &value) { return value.to_string(); }, bv, "1000000010101010");
 
     bv.at(0) = true; // Set LSB
-    assert(bv.to_string() == "1000000010101011" && "at() should correctly modify the LSB (bit 0)");
+    test_unary([](const auto &value) { return value.to_string(); }, bv, "1000000010101011");
 }
 
 /// @brief Tests that `at()` works correctly for a large BitVector.
@@ -731,15 +720,15 @@ void test_at_large_bitvector()
 {
     bvlib::BitVector<64> bv("1010101010101010101010101010101010101010101010101010101010101010");
 
-    assert(bv.at(0) == false && "at() should return the correct value for bit 0 of a large BitVector");
-    assert(bv.at(63) == true && "at() should return the correct value for bit 63 of a large BitVector");
+    test_unary([](const auto &value) { return value.at(0U); }, bv, false);
+    test_unary([](const auto &value) { return value.at(63U); }, bv, true);
 
     bv.at(0)  = true;  // Modify the LSB
     bv.at(63) = false; // Modify the MSB
 
-    assert(
-        bv.to_string() == "0010101010101010101010101010101010101010101010101010101010101011" &&
-        "at() should allow modification of the MSB and LSB in a large BitVector");
+    test_unary(
+        [](const auto &value) { return value.to_string(); }, bv,
+        "0010101010101010101010101010101010101010101010101010101010101011");
 }
 
 /// @brief Tests that `at()` modifies a large bitvector correctly with multiple changes.
@@ -753,9 +742,9 @@ void test_at_large_bitvector_multiple_changes()
     bv.at(7)  = false;
     bv.at(63) = false;
 
-    assert(
-        bv.to_string() == "0010101010101010101010101010101010101010101010101010101000001000" &&
-        "at() should correctly modify multiple bits in a large BitVector");
+    test_unary(
+        [](const auto &value) { return value.to_string(); }, bv,
+        "0010101010101010101010101010101010101010101010101010101000001000");
 
     // Resetting some bits back to 1
     bv.at(1)  = true;
@@ -763,9 +752,29 @@ void test_at_large_bitvector_multiple_changes()
     bv.at(7)  = true;
     bv.at(63) = true;
 
-    assert(
-        bv.to_string() == "1010101010101010101010101010101010101010101010101010101010101010" &&
-        "at() should correctly reset modified bits in a large BitVector");
+    test_unary(
+        [](const auto &value) { return value.to_string(); }, bv,
+        "1010101010101010101010101010101010101010101010101010101010101010");
+}
+
+// ============================================================================
+// slice() TESTS
+// ============================================================================
+
+void test_slice()
+{
+    bvlib::BitVector<8> bv8("11001100");
+    bvlib::BitVector<16> bv16("1100110011001100");
+    bvlib::BitVector<32> bv32("11001100110011001100110011001100");
+
+    // Slice from bit 2 to bit 5 (inclusive).
+    test_unary([](const auto &value) { return value.template slice<2 COMMA 5>(); }, bv8, "0011");
+    // Slice from bit 5 to bit 6 (inclusive).
+    test_unary([](const auto &value) { return value.template slice<5 COMMA 6>(); }, bv8, "10");
+    // Slice from bit 4 to bit 11 (inclusive).
+    test_unary([](const auto &value) { return value.template slice<4 COMMA 11>(); }, bv16, "11001100");
+    // Slice from bit 8 to bit 15 (inclusive).
+    test_unary([](const auto &value) { return value.template slice<8 COMMA 15>(); }, bv32, "11001100");
 }
 
 // ============================================================================
@@ -913,6 +922,14 @@ void run_all_at_tests()
 
     std::cout << "    ✅ All at() tests completed!\n";
 }
+
+void run_all_slice_tests()
+{
+    test_slice();
+
+    std::cout << "    ✅ All slice() tests completed!\n";
+}
+
 int main()
 {
     std::cout << "Running all standard function tests.\n";
@@ -925,6 +942,7 @@ int main()
     run_all_swap_tests();
     run_all_assign_rassign_tests();
     run_all_at_tests();
+    run_all_slice_tests();
 
     std::cout << "✅ All standard function tests passed!\n";
     return 0;

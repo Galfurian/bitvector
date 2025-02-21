@@ -86,6 +86,8 @@ void __test_value(
     }
 }
 
+#define COMMA ,
+
 // Helper macro to capture the test details, including the file, line, and test expression.
 #define test_binary(function, lhs, rhs, expected_result)                                                               \
     do {                                                                                                               \

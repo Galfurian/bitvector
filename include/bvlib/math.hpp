@@ -29,9 +29,30 @@ inline auto count_leading_zeros(T x) -> std::size_t
     }
     std::size_t count = 0;
     // Mask to check the most significant bit.
-    for (unsigned long mask = static_cast<unsigned long>(1) << (sizeof(T) * CHAR_BIT - 1); (x & mask) == 0;
+    for (unsigned long mask = static_cast<unsigned long>(1) << (sizeof(T) * CHAR_BIT - 1); 
+         (x & mask) == 0;
          mask >>= 1) {
         count++;
+    }
+    return count;
+}
+
+/// @brief Counts the number of trailing zeros in a number.
+/// @param x The input number.
+/// @return The number of trailing zeros.
+template <typename T>
+inline auto count_trailing_zeros(T x) -> std::size_t
+{
+    // Special case: all bits are zero.
+    if (x == 0) {
+        // Return the bit-width of T (based on CHAR_BIT).
+        return sizeof(T) * CHAR_BIT;
+    }
+    std::size_t count = 0;
+    // Mask to check the least significant bit.
+    while ((x & 1) == 0) {
+        count++;
+        x >>= 1; // Right shift to check the next bit.
     }
     return count;
 }
