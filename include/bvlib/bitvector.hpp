@@ -547,9 +547,17 @@ public:
         return detail::BitReference<BlockType>(data[block], bit);
     }
 
-    // Slicing function that returns a new BitVector of the sliced bits.
+    /// @brief Slices the BitVector from the specified start to end bit position.
+    ///
+    /// This function returns a new BitVector that contains the bits between the
+    /// start and end indices (inclusive). It is a non-destructive operation
+    /// that preserves the original BitVector while returning a subset of its bits.
+    ///
+    /// @tparam Start The index of the first bit to include in the slice (inclusive).
+    /// @tparam End The index of the last bit to include in the slice (inclusive).
+    /// @return A new BitVector containing the sliced bits from the original BitVector.
     template <std::size_t Start, std::size_t End>
-    BitVector<End - Start + 1> slice() const
+    auto slice() const -> BitVector<End - Start + 1>
     {
         static_assert(Start < End, "Start index must be less than End index.");
         static_assert(End <= N, "End index must be within the size of the BitVector.");
@@ -676,12 +684,12 @@ public:
     /// @brief Gets the block index for a given bit position.
     /// @param pos The bit position in the BitVector.
     /// @return The index of the block containing the bit.
-    inline std::size_t get_block_index(std::size_t pos) const { return pos / BitsPerBlock; }
+    auto get_block_index(std::size_t pos) const -> std::size_t { return pos / BitsPerBlock; }
 
     /// @brief Gets the bit position within a block for a given bit position.
     /// @param pos The bit position in the BitVector.
     /// @return The position of the bit within its block.
-    inline std::size_t get_bit_position(std::size_t pos) const { return pos % BitsPerBlock; }
+    auto get_bit_position(std::size_t pos) const -> std::size_t { return pos % BitsPerBlock; }
 };
 
 } // namespace bvlib

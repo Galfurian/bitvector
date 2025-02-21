@@ -1457,10 +1457,9 @@ inline auto operator^=(T &lhs, const BitVector<N> &rhs) -> T &
 // BITWISE (~)
 // ============================================================================
 
-/// @brief Performs bitwise NOT between two BitVectors.
-/// @param lhs The first BitVector.
-/// @param rhs The second BitVector.
-/// @return The result of the bitwise NOT between the two BitVectors.
+/// @brief Performs bitwise negation.
+/// @param bv The BitVector.
+/// @return The result of the bitwise negation.
 template <std::size_t N>
 inline auto operator~(const BitVector<N> &bv) -> BitVector<N>
 {
