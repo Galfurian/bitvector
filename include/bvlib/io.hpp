@@ -19,7 +19,7 @@
 template <std::size_t N>
 auto operator<<(std::ostream &lhs, const bvlib::BitVector<N> &rhs) -> std::ostream &
 {
-    lhs << rhs.template to_number<long>();
+    lhs << rhs.to_string();
     return lhs;
 }
 
@@ -30,7 +30,7 @@ auto operator<<(std::ostream &lhs, const bvlib::BitVector<N> &rhs) -> std::ostre
 template <std::size_t N>
 auto operator<<(std::stringstream &lhs, const bvlib::BitVector<N> &rhs) -> std::stringstream &
 {
-    lhs << rhs.template to_number<long>();
+    lhs << rhs.to_string();
     return lhs;
 }
 

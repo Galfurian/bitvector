@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <climits>
 #include <cmath>
@@ -16,7 +17,7 @@
 
 enum : unsigned char {
     BVLIB_MAJOR_VERSION = 1, ///< Major version of the library.
-    BVLIB_MINOR_VERSION = 3, ///< Minor version of the library.
+    BVLIB_MINOR_VERSION = 4, ///< Minor version of the library.
     BVLIB_MICRO_VERSION = 0  ///< Micro version of the library.
 };
 
@@ -37,11 +38,30 @@ inline auto popcount(T x) -> std::size_t
     std::size_t count = 0;
     while (x) {
         // Clears the lowest set bit.
-        x &= (x - 1);
+        x = static_cast<T>(x & (x - 1));
         count++;
     }
     return count;
 }
+
+/// @brief Calculates the smallest appropriate unsigned data type for BlockType
+/// based on the number of bits in the BitVector.
+/// @param N The size of the BitVector in bits.
+template <std::size_t N>
+struct BlockTypeHelper {
+    /// Determine the smallest unsigned integer type that can store N bits.
+    using type = std::conditional_t<
+        (N <= 8),
+        std::uint8_t, // 8-bit
+        std::conditional_t<
+            (N <= 16),
+            std::uint16_t, // 16-bit
+            std::conditional_t<
+                (N <= 32),
+                std::uint32_t, // 32-bit
+                std::uint64_t  // 64-bit
+                >>>;
+};
 
 /// @brief A reference-like proxy to a modifiable bit.
 /// @details
@@ -57,9 +77,9 @@ class BitReference
 {
 private:
     /// @brief The block containing the bit being referenced.
-    std::reference_wrapper<BlockType> _block;
+    std::reference_wrapper<BlockType> block;
     /// @brief The position of the bit within the block.
-    std::size_t _pos;
+    std::size_t position;
 
 public:
     /// @brief Constructs a BitReference for a specific block and bit position.
@@ -67,11 +87,11 @@ public:
     /// This constructor initializes the reference with a block and a bit position.
     /// It allows modifying or accessing the bit at the specified position within the block.
     ///
-    /// @param b The block that contains the bit.
-    /// @param pos The position of the bit within the block.
-    BitReference(BlockType &b, std::size_t pos)
-        : _block(b)
-        , _pos(pos)
+    /// @param _block The block that contains the bit.
+    /// @param _position The position of the bit within the block.
+    BitReference(BlockType &_block, std::size_t _position)
+        : block(_block)
+        , position(_position)
     {
         // Nothing to do
     }
@@ -82,7 +102,7 @@ public:
     /// It returns `true` if the bit at the specified position is set, `false` otherwise.
     ///
     /// @return `true` if the referenced bit is set, `false` otherwise.
-    operator bool() const { return (_block & (BlockType(1) << _pos)) != 0; }
+    operator bool() const { return (block & (BlockType(1) << position)) != 0; }
 
     /// @brief Assigns a value to the referenced bit.
     /// @details
@@ -94,9 +114,11 @@ public:
     auto operator=(bool value) -> BitReference &
     {
         if (value) {
-            _block |= (BlockType(1) << _pos); ///< Set the bit to 1.
+            // Set the bit.
+            block |= static_cast<BlockType>(BlockType(1) << position);
         } else {
-            _block &= ~(BlockType(1) << _pos); ///< Clear the bit (set to 0).
+            // Clear the bit.
+            block &= static_cast<BlockType>(~(BlockType(1) << position));
         }
         return *this;
     }
@@ -115,7 +137,10 @@ public:
     /// @brief Defines the block type used for storing bits.
     /// @details The block type is defined as a 64-bit unsigned integer, which
     /// will store multiple bits per block for efficient operations.
-    using BlockType = std::uint32_t;
+    using BlockType = typename detail::BlockTypeHelper<N>::type;
+
+    /// @brief Number of stored bits.
+    static constexpr std::size_t NumBits = N;
 
     /// @brief Number of bits per block.
     /// @details This is calculated as the size of the block type in bits, using
@@ -181,13 +206,27 @@ public:
     explicit BitVector(const BitVector<N2> &other)
         : data{}
     {
+        // Determine the number of full blocks to copy (using the smaller of the two block counts).
         constexpr std::size_t minBlocks = std::min(NumBlocks, BitVector<N2>::NumBlocks);
+
+        // Copy full blocks, but ensure the bitwise copy works even with different BlockTypes.
         for (std::size_t i = 0; i < minBlocks; ++i) {
-            data[i] = other.data[i];
+            // Extract bits from the other vector's block and place them in the corresponding block of this vector
+            data[i] = static_cast<BlockType>(other.data[i]);
         }
-        // Ensure extra bits beyond N2 are cleared.
+
+        // Handle extra bits if N2 < N, we need to clear any bits beyond the valid part in this vector
         if constexpr (N2 < N) {
+            // Ensure extra bits are cleared, as they don't exist in the source.
             trim();
+        }
+
+        // Handle the case where the source vector has more blocks but fewer bits
+        if constexpr (N2 > N) {
+            // For the case where source has more blocks but this vector is smaller, clear excess bits
+            for (std::size_t i = N; i < NumBlocks; ++i) {
+                data[i] = 0;
+            }
         }
     }
 
@@ -218,7 +257,7 @@ public:
     {
         BitVector<N> result;
         // Set all bits to 1.
-        result.data.fill(~BlockType(0));
+        result.data.fill(static_cast<BlockType>(~0U));
         result.trim();
         return result;
     }
@@ -232,7 +271,7 @@ public:
     auto set() -> BitVector<N> &
     {
         // Set all bits in each block.
-        data.fill(~BlockType(0));
+        data.fill(static_cast<BlockType>(~0U));
         // Ensure extra bits beyond N are cleared.
         trim();
         return *this;
@@ -246,11 +285,18 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Bit position out of range.");
         }
-        data[pos / BitsPerBlock] |= (BlockType(1) << (pos % BitsPerBlock));
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Set the bit at the calculated position.
+        data[block] |= static_cast<BlockType>(BlockType(1) << bit);
+
         return *this;
     }
 
-    /// @brief Sets every bit to false.
+    /// @brief Sets every bit to false.+
+
     /// @return A reference to the modified BitVector.
     auto reset() -> BitVector<N> &
     {
@@ -267,8 +313,12 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Bit position out of range");
         }
-        // Ensure same indexing as `set(pos)`
-        data[pos / BitsPerBlock] &= ~(BlockType(1) << (pos % BitsPerBlock));
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Reset the bit at the calculated position.
+        data[block] = static_cast<BlockType>(data[block] & ~(1U << bit));
         return *this;
     }
 
@@ -290,7 +340,7 @@ public:
     auto flip() -> BitVector<N> &
     {
         for (auto &block : data) {
-            block = ~block;
+            block = static_cast<BlockType>(~block);
         }
         trim();
         return *this;
@@ -304,7 +354,12 @@ public:
         if (pos >= N) {
             throw std::out_of_range("BitVector index out of range");
         }
-        data[pos / BitsPerBlock] ^= (BlockType(1) << (pos % BitsPerBlock));
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Flip the bit at the calculated position.
+        data[block] = static_cast<BlockType>(data[block] ^ (1 << bit));
         return *this;
     }
 
@@ -341,18 +396,18 @@ public:
     {
         // Check all blocks except the last one.
         for (std::size_t i = 0; i < NumBlocks - 1; ++i) {
-            if (data[i] != ~BlockType(0)) {
+            if (data[i] != static_cast<BlockType>(~0U)) {
                 return false;
             }
         }
         // For the last block, handle excess bits.
-        const std::size_t extra_bits = (NumBlocks * BitsPerBlock) - N;
-        if (extra_bits == 0 || (data[NumBlocks - 1] == ~BlockType(0))) {
+        if (data[NumBlocks - 1] == static_cast<BlockType>(~0U)) {
             return true;
         }
-
+        // For the last block, handle excess bits.
+        auto extra_bits = static_cast<BlockType>((NumBlocks * BitsPerBlock) - N);
         // Create a mask for the last block's valid bits and check.
-        BlockType mask = (BlockType(1) << (BitsPerBlock - extra_bits)) - 1;
+        auto mask       = static_cast<BlockType>(1 << (BitsPerBlock - extra_bits)) - 1;
         return (data[NumBlocks - 1] & mask) == mask;
     }
 
@@ -468,7 +523,12 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Accessing values outside bitvector");
         }
-        return (data[pos / BitsPerBlock] & (BlockType(1) << (pos % BitsPerBlock))) != 0;
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Return the bit at the calculated position.
+        return (data[block] & (BlockType(1) << bit)) != 0;
     }
 
     /// @brief Returns a modifiable reference-like proxy to a bit.
@@ -479,7 +539,34 @@ public:
         if (pos >= N) {
             throw std::out_of_range("Accessing values outside bitvector");
         }
-        return detail::BitReference<BlockType>(data[pos / BitsPerBlock], pos % BitsPerBlock);
+        // Get the block index and bit position for the given position.
+        std::size_t block = get_block_index(pos);
+        std::size_t bit   = get_bit_position(pos);
+
+        // Return the bit reference at the calculated position.
+        return detail::BitReference<BlockType>(data[block], bit);
+    }
+
+    /// @brief Slices the BitVector from the specified start to end bit position.
+    ///
+    /// This function returns a new BitVector that contains the bits between the
+    /// start and end indices (inclusive). It is a non-destructive operation
+    /// that preserves the original BitVector while returning a subset of its bits.
+    ///
+    /// @tparam Start The index of the first bit to include in the slice (inclusive).
+    /// @tparam End The index of the last bit to include in the slice (inclusive).
+    /// @return A new BitVector containing the sliced bits from the original BitVector.
+    template <std::size_t Start, std::size_t End>
+    auto slice() const -> BitVector<End - Start + 1>
+    {
+        static_assert(Start < End, "Start index must be less than End index.");
+        static_assert(End <= N, "End index must be within the size of the BitVector.");
+
+        BitVector<End - Start + 1> result;
+        for (std::size_t i = 0; i < End - Start + 1; ++i) {
+            result[i] = this->at(Start + i);
+        }
+        return result;
     }
 
     /// @brief Copies the contents of the provided BitVector into this BitVector.
@@ -491,8 +578,7 @@ public:
     {
         // Clear all bits.
         reset();
-        std::size_t min_size = std::min(N, N2);
-        for (std::size_t i = 0; i < min_size; ++i) {
+        for (std::size_t i = 0; i < std::min(N, N2); ++i) {
             if (rhs[i]) {
                 set(i);
             }
@@ -547,6 +633,16 @@ public:
     /// @return A BitReference object allowing modification of the bit.
     auto operator[](std::size_t pos) -> detail::BitReference<BlockType> { return at(pos); }
 
+    /// @brief Returns the bit at the given position using array indexing.
+    /// @param pos The bit position.
+    /// @return True if the bit is set, false otherwise.
+    auto operator()(std::size_t pos) const -> bool { return at(pos); }
+
+    /// @brief Returns a modifiable reference-like proxy to a bit using array indexing.
+    /// @param pos The bit position.
+    /// @return A BitReference object allowing modification of the bit.
+    auto operator()(std::size_t pos) -> detail::BitReference<BlockType> { return at(pos); }
+
     /// @brief Converts the BitVector to a signed or unsigned integer.
     /// @tparam T The target integer type.
     /// @return The integer representation of the BitVector.
@@ -571,15 +667,29 @@ public:
     }
 
     /// @brief Converts the BitVector to a string.
+    /// @param split if true, it will add spaces between blocks based on BitsPerBlock.
     /// @return The binary string representing the bitvector.
-    auto to_string() const -> std::string
+    auto to_string(bool split = false) const -> std::string
     {
         std::string str;
         for (std::size_t i = 0; i < N; ++i) {
+            if (split && (i > 0) && ((i % BitsPerBlock) == 0)) {
+                str.push_back(' ');
+            }
             str.push_back(at(N - 1 - i) ? '1' : '0');
         }
         return str;
     }
+
+    /// @brief Gets the block index for a given bit position.
+    /// @param pos The bit position in the BitVector.
+    /// @return The index of the block containing the bit.
+    auto get_block_index(std::size_t pos) const -> std::size_t { return pos / BitsPerBlock; }
+
+    /// @brief Gets the bit position within a block for a given bit position.
+    /// @param pos The bit position in the BitVector.
+    /// @return The position of the bit within its block.
+    auto get_bit_position(std::size_t pos) const -> std::size_t { return pos % BitsPerBlock; }
 };
 
 } // namespace bvlib

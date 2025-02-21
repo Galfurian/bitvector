@@ -29,9 +29,30 @@ inline auto count_leading_zeros(T x) -> std::size_t
     }
     std::size_t count = 0;
     // Mask to check the most significant bit.
-    for (unsigned long mask = static_cast<unsigned long>(1) << (sizeof(T) * CHAR_BIT - 1); (x & mask) == 0;
+    for (unsigned long mask = static_cast<unsigned long>(1) << (sizeof(T) * CHAR_BIT - 1); 
+         (x & mask) == 0;
          mask >>= 1) {
         count++;
+    }
+    return count;
+}
+
+/// @brief Counts the number of trailing zeros in a number.
+/// @param x The input number.
+/// @return The number of trailing zeros.
+template <typename T>
+inline auto count_trailing_zeros(T x) -> std::size_t
+{
+    // Special case: all bits are zero.
+    if (x == 0) {
+        // Return the bit-width of T (based on CHAR_BIT).
+        return sizeof(T) * CHAR_BIT;
+    }
+    std::size_t count = 0;
+    // Mask to check the least significant bit.
+    while ((x & 1) == 0) {
+        count++;
+        x >>= 1; // Right shift to check the next bit.
     }
     return count;
 }
@@ -57,34 +78,6 @@ inline auto most_significant_bit(const BitVector<N> &bitvector) -> std::size_t
     return 0;
 }
 
-/// @brief Adds two bits, and sets the carry.
-/// @param b1 fist bit.
-/// @param b2 second bit.
-/// @param carry the carry from the operation.
-/// @return the sum of the two bits.
-inline auto add_bits(bool b1, bool b2, bool &carry) -> bool
-{
-    // Standard bitwise sum with carry.
-    bool sum = (b1 ^ b2 ^ static_cast<int>(static_cast<int>(carry) != 0)) != 0;
-    // Carry logic.
-    carry    = (b1 && b2) || (b1 && carry) || (b2 && carry);
-    return sum;
-}
-
-/// @brief Computes the difference between two bits, and updates the borrow.
-/// @param b1 fist bit.
-/// @param b2 second bit.
-/// @param borrow the borrow from the operation.
-/// @return the difference between the two bits.
-inline auto sub_bits(bool b1, bool b2, bool &borrow) -> bool
-{
-    // Standard bitwise subtraction with borrow.
-    bool difference = (b1 ^ b2 ^ static_cast<int>(static_cast<int>(borrow) != 0)) != 0;
-    // Borrow logic.
-    borrow          = (!b1 && b2) || (borrow && (!b1 || b2));
-    return difference;
-}
-
 /// @brief Adds two blocks and sets the carry, modifying the lhs block in place.
 /// @param lhs_block The first block (to be modified).
 /// @param rhs_block The second block.
@@ -94,9 +87,9 @@ template <typename BlockType>
 inline auto add_block_inplace(BlockType &lhs_block, BlockType rhs_block, bool &carry) -> BlockType &
 {
     // Add the rhs block and the carry to the lhs block directly.
-    lhs_block += rhs_block + carry;
+    lhs_block = static_cast<BlockType>(lhs_block + rhs_block + carry);
     // Update the carry: If the result of addition overflows, set carry to 1, else 0.
-    carry = lhs_block < rhs_block;
+    carry     = lhs_block < rhs_block;
     // Return A reference to the first block.
     return lhs_block;
 }
@@ -109,10 +102,12 @@ inline auto add_block_inplace(BlockType &lhs_block, BlockType rhs_block, bool &c
 template <typename BlockType>
 inline auto add_block(BlockType lhs_block, BlockType rhs_block, bool &carry) -> BlockType
 {
-    // Initialize the result.
-    BlockType result = lhs_block;
-    // Add the blocks.
-    return add_block_inplace(result, rhs_block, carry);
+    // Add the rhs block and the carry to the lhs block directly.
+    lhs_block = static_cast<BlockType>(lhs_block + rhs_block + carry);
+    // Update the carry: If the result of addition overflows, set carry to 1, else 0.
+    carry     = lhs_block < rhs_block;
+    // Return A reference to the first block.
+    return lhs_block;
 }
 
 /// @brief Subtracts two blocks and sets the borrow, modifying the lhs block in place.
@@ -123,12 +118,14 @@ inline auto add_block(BlockType lhs_block, BlockType rhs_block, bool &carry) -> 
 template <typename BlockType>
 inline auto subtract_block_inplace(BlockType &lhs_block, BlockType rhs_block, bool &borrow) -> BlockType &
 {
-    // Subtract the rhs block and the borrow from the lhs block directly.
-    lhs_block -= rhs_block + borrow;
-    // Update the borrow: If the result of subtraction is negative, set borrow
-    // to 1, else 0.
-    borrow = (lhs_block > rhs_block);
-    // Return A reference to the first block.
+    // Precompute the borrow: If lhs_block is smaller than rhs_block + borrow,
+    // borrow will be set to true.
+    bool new_borrow = (lhs_block < (rhs_block + borrow));
+    // Perform the subtraction with the borrow.
+    lhs_block       = static_cast<BlockType>(lhs_block - rhs_block - borrow);
+    // Update the borrow value.
+    borrow          = new_borrow;
+    // Return a reference to the modified lhs_block.
     return lhs_block;
 }
 
@@ -140,70 +137,77 @@ inline auto subtract_block_inplace(BlockType &lhs_block, BlockType rhs_block, bo
 template <typename BlockType>
 inline auto subtract_block(BlockType lhs_block, BlockType rhs_block, bool &borrow) -> BlockType
 {
-    // Initialize the result.
-    BlockType result = lhs_block;
-    // Subtract the blocks.
-    return subtract_block_inplace(result, rhs_block, borrow);
+    // Precompute the borrow: If lhs_block is smaller than rhs_block + borrow,
+    // borrow will be set to true.
+    bool new_borrow = (lhs_block < (rhs_block + borrow));
+    // Perform the subtraction with the borrow.
+    lhs_block       = static_cast<BlockType>(lhs_block - rhs_block - borrow);
+    // Update the borrow value.
+    borrow          = new_borrow;
+    // Return a reference to the modified lhs_block.
+    return lhs_block;
 }
 
 /// @brief Shifts full blocks of a BitVector to the right or left.
 /// @tparam direction The direction to shift: positive for right shift, negative for left shift.
-/// @tparam BlockType The datatype of blocks.
-/// @tparam NumBlocks The number of blocks.
-/// @param data The data array that holds the blocks of the BitVector.
+/// @param bv The BitVector to shift.
 /// @param block_shift The number of blocks to shift.
-template <int direction, typename BlockType, std::size_t NumBlocks>
-inline void shift_full_blocks(std::array<BlockType, NumBlocks> &data, std::size_t block_shift)
+template <int direction, std::size_t N>
+inline void shift_full_blocks(BitVector<N> &bv, std::size_t block_shift)
 {
+    constexpr auto NumBlocks = BitVector<N>::NumBlocks;
+
     if (block_shift) {
-        // Handle positive for right shift.
+        // Handle left shift (negative direction).
         if constexpr (direction > 0) {
-            // Right shift full blocks
-            for (std::size_t i = NumBlocks - 1; i >= block_shift; --i) {
-                data[i] = data[i - block_shift];
-            }
-            std::fill(data.begin(), data.begin() + block_shift, 0);
-        }
-        // Handle negative for left shift.
-        else if constexpr (direction < 0) {
             // Left shift full blocks
             for (std::size_t i = 0; i < NumBlocks - block_shift; ++i) {
-                data[i] = data[i + block_shift];
+                bv.data[i] = bv.data[i + block_shift];
             }
-            std::fill(data.end() - block_shift, data.end(), 0);
+            // Zero out the remaining blocks that have moved.
+            std::fill(bv.data.end() - block_shift, bv.data.end(), 0);
+        }
+        // Handle right shift (positive direction).
+        else if constexpr (direction < 0) {
+            // Right shift full blocks
+            for (std::size_t i = NumBlocks - 1; i >= block_shift; --i) {
+                bv.data[i] = bv.data[i - block_shift];
+            }
+            // Zero out the remaining blocks.
+            std::fill(bv.data.begin(), bv.data.begin() + block_shift, 0);
         }
     }
 }
 
 /// @brief Shifts bits within blocks of a BitVector in either direction.
 /// @tparam direction The direction to shift: positive for right shift, negative for left shift.
-/// @tparam BlockType The datatype of blocks.
-/// @tparam NumBlocks The number of blocks.
-/// @param data The data array that holds the blocks of the BitVector.
+/// @param bv The BitVector to shift.
 /// @param bit_shift The number of bits to shift.
-template <int direction, typename BlockType, std::size_t NumBlocks>
-inline void shift_within_blocks(std::array<BlockType, NumBlocks> &data, std::size_t bit_shift)
+template <int direction, std::size_t N>
+inline void shift_within_blocks(BitVector<N> &bv, std::size_t bit_shift)
 {
+    using BlockType             = typename BitVector<N>::BlockType;
+    constexpr auto NumBlocks    = BitVector<N>::NumBlocks;
+    constexpr auto BitsPerBlock = static_cast<BlockType>(BitVector<N>::BitsPerBlock);
     if (bit_shift) {
-        // Handle positive for right shift.
-        if constexpr (direction > 0) {
-            // Right shift within blocks
-            for (std::size_t i = 0; i < NumBlocks - 1; ++i) {
-                // Wrap the bits from the next block.
-                data[i] = (data[i] >> bit_shift) | (data[i + 1] << (BlockType(0) - bit_shift));
-            }
-            // Shift the last block.
-            data[NumBlocks - 1] >>= bit_shift;
-        }
-        // Handle negative for left shift.
-        else if constexpr (direction < 0) {
-            // Left shift within blocks
+        // Precompute the wrap bits once.
+        const auto wrap_bits = BitsPerBlock - bit_shift;
+        if constexpr (direction < 0) {
+            // Left shift within blocks.
             for (std::size_t i = NumBlocks - 1; i > 0; --i) {
-                // Wrap the bits from the previous block.
-                data[i] = (data[i] << bit_shift) | (data[i - 1] >> (BlockType(0) - bit_shift));
+                // Shift current block left, and wrap bits from the previous block.
+                bv.data[i] = static_cast<BlockType>((bv.data[i] << bit_shift) | (bv.data[i - 1] >> wrap_bits));
             }
-            // Shift the first block.
-            data[0] <<= bit_shift;
+            // Handle the first block (no previous block to wrap bits from).
+            bv.data[0] = static_cast<BlockType>(bv.data[0] << bit_shift);
+        } else if constexpr (direction > 0) {
+            // Right shift within blocks.
+            for (std::size_t i = 0; i < NumBlocks - 1; ++i) {
+                // Shift current block right, and wrap bits from the next block.
+                bv.data[i] = static_cast<BlockType>((bv.data[i] >> bit_shift) | (bv.data[i + 1] << wrap_bits));
+            }
+            // Handle the last block (no next block to wrap bits from).
+            bv.data[NumBlocks - 1] = static_cast<BlockType>(bv.data[NumBlocks - 1] >> bit_shift);
         }
     }
 }
@@ -213,7 +217,7 @@ inline void shift_within_blocks(std::array<BlockType, NumBlocks> &data, std::siz
 /// @param shift The number of bits to shift.
 /// @return Reference to the shifted BitVector.
 template <std::size_t N>
-inline auto shift_left(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
+inline auto shift_left_inplace(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
 {
     // No change when shifting by 0.
     if (shift == 0) {
@@ -225,9 +229,9 @@ inline auto shift_left(BitVector<N> &bitvector, std::size_t shift) -> BitVector<
         return bitvector;
     }
     // Shift full blocks to the left, passing -1 for left shift.
-    bvlib::detail::shift_full_blocks<-1>(bitvector.data, shift / BitVector<N>::BitsPerBlock);
+    detail::shift_full_blocks<-1>(bitvector, bitvector.get_block_index(shift));
     // Shift bits within blocks, passing -1 for left shift.
-    bvlib::detail::shift_within_blocks<-1>(bitvector.data, shift % BitVector<N>::BitsPerBlock);
+    detail::shift_within_blocks<-1>(bitvector, bitvector.get_bit_position(shift));
     // Ensure extra bits beyond N are cleared.
     bitvector.trim();
     return bitvector;
@@ -238,7 +242,7 @@ inline auto shift_left(BitVector<N> &bitvector, std::size_t shift) -> BitVector<
 /// @param shift The number of bits to shift.
 /// @return Reference to the shifted BitVector.
 template <std::size_t N>
-inline auto shift_right(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
+inline auto shift_right_inplace(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
 {
     // No change when shifting by 0.
     if (shift == 0) {
@@ -250,9 +254,9 @@ inline auto shift_right(BitVector<N> &bitvector, std::size_t shift) -> BitVector
         return bitvector;
     }
     // Shift full blocks to the right, passing +1 for right shift.
-    bvlib::detail::shift_full_blocks<+1>(bitvector.data, shift / BitVector<N>::BitsPerBlock);
+    detail::shift_full_blocks<+1>(bitvector, bitvector.get_block_index(shift));
     // Shift bits within blocks, passing +1 for right shift.
-    bvlib::detail::shift_within_blocks<+1>(bitvector.data, shift % BitVector<N>::BitsPerBlock);
+    detail::shift_within_blocks<+1>(bitvector, bitvector.get_bit_position(shift));
     return bitvector;
 }
 
@@ -264,7 +268,7 @@ template <std::size_t N>
 inline auto shift_left(const BitVector<N> &bitvector, std::size_t shift) -> BitVector<N>
 {
     BitVector<N> result = bitvector;
-    return shift_left(result, shift);
+    return detail::shift_left_inplace(result, shift);
 }
 
 /// @brief Right-shifts the BitVector by the given number of bits.
@@ -275,7 +279,7 @@ template <std::size_t N>
 inline auto shift_right(const BitVector<N> &bitvector, std::size_t shift) -> BitVector<N>
 {
     BitVector<N> result = bitvector;
-    return shift_right(result, shift);
+    return detail::shift_right_inplace(result, shift);
 }
 
 /// @brief Computes the sum of two BitVectors.
@@ -297,7 +301,7 @@ inline auto sum(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector
         auto lhs_block = static_cast<BlockType>((i < BitVector<N1>::NumBlocks) ? lhs.data[i] : 0);
         auto rhs_block = static_cast<BlockType>((i < BitVector<N2>::NumBlocks) ? rhs.data[i] : 0);
         // Use add_block to add the blocks and handle the carry in place.
-        result.data[i] = bvlib::detail::add_block(lhs_block, rhs_block, carry);
+        result.data[i] = detail::add_block(lhs_block, rhs_block, carry);
         // If there's an overflow, throw an exception.
         if (carry && (i == NumBlocks - 1)) {
             throw std::overflow_error("Overflow occurred while adding BitVectors");
@@ -313,16 +317,15 @@ inline auto sum(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector
 template <std::size_t N1, std::size_t N2>
 inline auto sum_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
-    using ResultType                = BitVector<N1>;
-    using BlockType                 = typename ResultType::BlockType;
-    constexpr std::size_t NumBlocks = ResultType::NumBlocks;
+    using BlockType                 = typename BitVector<N1>::BlockType;
+    constexpr std::size_t NumBlocks = BitVector<N1>::NumBlocks;
     // Keep track of the carry.
     bool carry                      = false;
     // Iterate block-wise for efficient addition.
     for (std::size_t i = 0; i < NumBlocks; ++i) {
         auto rhs_block = static_cast<BlockType>((i < BitVector<N2>::NumBlocks) ? rhs.data[i] : 0);
         // Use add_block to add the blocks and handle the carry in place.
-        bvlib::detail::add_block_inplace(lhs.data[i], rhs_block, carry);
+        detail::add_block_inplace(lhs.data[i], rhs_block, carry);
         // If there's an overflow, throw an exception.
         if (carry && (i == NumBlocks - 1)) {
             throw std::overflow_error("Overflow occurred while adding BitVectors");
@@ -351,7 +354,7 @@ inline auto sub(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector
         auto rhs_block = static_cast<BlockType>((i < BitVector<N2>::NumBlocks) ? rhs.data[i] : 0);
         // Use subtract_block to subtract the blocks and handle the borrow in
         // place.
-        result.data[i] = bvlib::detail::subtract_block(lhs_block, rhs_block, borrow);
+        result.data[i] = detail::subtract_block(lhs_block, rhs_block, borrow);
     }
     return result;
 }
@@ -373,7 +376,7 @@ inline auto sub_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVect
         auto rhs_block = static_cast<BlockType>((i < BitVector<N2>::NumBlocks) ? rhs.data[i] : 0);
         // Use subtract_block_inplace to subtract the blocks and handle the
         // borrow in place.
-        bvlib::detail::subtract_block_inplace(lhs.data[i], rhs_block, borrow);
+        detail::subtract_block_inplace(lhs.data[i], rhs_block, borrow);
     }
     return lhs;
 }
@@ -393,7 +396,7 @@ inline auto mul(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector
     for (std::size_t i = 0; i < lhs.size(); ++i) {
         if (lhs.at(i)) {
             // Shift the rhs by i bits and add.
-            sum_inplace(result, shift_left(temp, i));
+            detail::sum_inplace(result, shift_left(temp, i));
         }
     }
     return result;
@@ -413,7 +416,7 @@ inline auto mul_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVect
     for (std::size_t i = 0; i < lhs.size(); ++i) {
         if (lhs_copy.at(i)) {
             // Shift the rhs by i bits and add.
-            sum_inplace(lhs, shift_left(rhs, i));
+            detail::sum_inplace(lhs, shift_left(rhs, i));
         }
     }
     return lhs;
@@ -441,7 +444,7 @@ inline auto div(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> std::pair
         return {quotient, remainder}; // 0 / anything = 0 remainder 0
     }
     if (lhs == rhs) {
-        quotient[0] = true;
+        quotient = 1;
         return {quotient, remainder};
     } // lhs / lhs = 1
     if (lhs < rhs) {
@@ -453,7 +456,7 @@ inline auto div(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> std::pair
     divisor   = rhs;
 
     // Align divisor to the most significant bit of the dividend
-    std::size_t shift_amount = most_significant_bit(lhs) - most_significant_bit(rhs);
+    std::size_t shift_amount = detail::most_significant_bit(lhs) - detail::most_significant_bit(rhs);
     divisor <<= shift_amount;
 
     // Perform long division.
@@ -488,8 +491,8 @@ inline auto div_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> std::pa
     }
 
     if (lhs == rhs) {
-        quotient[0] = true;
-        lhs         = quotient;
+        quotient = 1;
+        lhs      = quotient;
         return {lhs, remainder};
     }
 
@@ -502,7 +505,7 @@ inline auto div_inplace(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> std::pa
     remainder = lhs;
 
     // Align divisor to the most significant bit of the dividend
-    std::size_t shift_amount = most_significant_bit(lhs) - most_significant_bit(rhs);
+    std::size_t shift_amount = detail::most_significant_bit(lhs) - detail::most_significant_bit(rhs);
     divisor <<= shift_amount;
 
     // Perform long division.
@@ -533,7 +536,7 @@ inline auto two_complement(BitVector<N> &bitvector) -> BitVector<N> &
     // Set the least significant bit to 1, effectively adding 1.
     one[0] = true;
     // Use sum_inplace to add 1 to the BitVector.
-    bvlib::detail::sum_inplace(bitvector, one);
+    detail::sum_inplace(bitvector, one);
     return bitvector;
 }
 
@@ -550,8 +553,7 @@ inline auto two_complement(BitVector<N> &bitvector) -> BitVector<N> &
 template <std::size_t N>
 inline auto operator<<(const BitVector<N> &bitvector, std::size_t shift) -> BitVector<N>
 {
-    BitVector<N> result = bitvector;
-    return bvlib::detail::shift_left(result, shift);
+    return detail::shift_left(bitvector, shift);
 }
 
 // ============================================================================
@@ -565,7 +567,7 @@ inline auto operator<<(const BitVector<N> &bitvector, std::size_t shift) -> BitV
 template <std::size_t N>
 inline auto operator<<=(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
 {
-    return bvlib::detail::shift_left(bitvector, shift);
+    return detail::shift_left_inplace(bitvector, shift);
 }
 
 // ============================================================================
@@ -579,8 +581,7 @@ inline auto operator<<=(BitVector<N> &bitvector, std::size_t shift) -> BitVector
 template <std::size_t N>
 inline auto operator>>(const BitVector<N> &bitvector, std::size_t shift) -> BitVector<N>
 {
-    BitVector<N> result = bitvector;
-    return bvlib::detail::shift_right(result, shift);
+    return detail::shift_right(bitvector, shift);
 }
 
 // ============================================================================
@@ -594,7 +595,7 @@ inline auto operator>>(const BitVector<N> &bitvector, std::size_t shift) -> BitV
 template <std::size_t N>
 inline auto operator>>=(BitVector<N> &bitvector, std::size_t shift) -> BitVector<N> &
 {
-    return bvlib::detail::shift_right(bitvector, shift);
+    return detail::shift_right_inplace(bitvector, shift);
 }
 
 // ============================================================================
@@ -656,6 +657,26 @@ inline auto operator==(T lhs, const BitVector<N> &rhs) -> bool
     return BitVector<N>(lhs) == rhs;
 }
 
+/// @brief Checks equality between a BitVector and a binary string.
+/// @param lhs The BitVector.
+/// @param rhs The binary string.
+/// @return True if they are equal, false otherwise.
+template <std::size_t N>
+inline auto operator==(const BitVector<N> &lhs, const std::string &rhs) -> bool
+{
+    return lhs.to_string() == rhs;
+}
+
+/// @brief Checks equality between a binary string and a BitVector.
+/// @param lhs The binary string.
+/// @param rhs The BitVector.
+/// @return True if they are equal, false otherwise.
+template <std::size_t N>
+inline auto operator==(const std::string &lhs, const BitVector<N> &rhs) -> bool
+{
+    return lhs == rhs.to_string();
+}
+
 // ============================================================================
 // BOOL (!=)
 // ============================================================================
@@ -688,6 +709,26 @@ template <std::size_t N, typename T, typename = typename std::enable_if<std::is_
 inline auto operator!=(T lhs, const BitVector<N> &rhs) -> bool
 {
     return !(lhs == rhs);
+}
+
+/// @brief Checks inequality between a BitVector and a binary string.
+/// @param lhs The BitVector.
+/// @param rhs The binary string.
+/// @return True if they are not equal, false otherwise.
+template <std::size_t N>
+inline auto operator!=(const BitVector<N> &lhs, const std::string &rhs) -> bool
+{
+    return lhs.to_string() != rhs;
+}
+
+/// @brief Checks inequality between a binary string and a BitVector.
+/// @param lhs The binary string.
+/// @param rhs The BitVector.
+/// @return True if they are not equal, false otherwise.
+template <std::size_t N>
+inline auto operator!=(const std::string &lhs, const BitVector<N> &rhs) -> bool
+{
+    return lhs != rhs.to_string();
 }
 
 // ============================================================================
@@ -854,7 +895,7 @@ inline auto operator>=(T lhs, const BitVector<N> &rhs) -> bool
 template <std::size_t N1, std::size_t N2>
 inline auto operator+(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
 {
-    return bvlib::detail::sum(lhs, rhs);
+    return detail::sum(lhs, rhs);
 }
 
 /// @brief Computes the sum of a BitVector and an integer.
@@ -864,7 +905,7 @@ inline auto operator+(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> Bit
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator+(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 {
-    return bvlib::detail::sum(lhs, BitVector<N>(rhs));
+    return detail::sum(lhs, BitVector<N>(rhs));
 }
 
 /// @brief Computes the sum of an integer and a BitVector.
@@ -874,7 +915,7 @@ inline auto operator+(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator+(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 {
-    return bvlib::detail::sum(BitVector<N>(lhs), rhs);
+    return detail::sum(BitVector<N>(lhs), rhs);
 }
 
 /// @brief Computes the sum of two BitVectors and stores the result in the first BitVector.
@@ -884,20 +925,7 @@ inline auto operator+(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 template <std::size_t N1, std::size_t N2>
 inline auto operator+=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
-    static_assert(N1 >= N2, "LHS must be at least as large as RHS");
-    bool carry = false;
-
-    // Iterate block-wise for efficient addition.
-    for (std::size_t i = 0; i < BitVector<N1>::NumBlocks; ++i) {
-        auto rhs_block = (i < BitVector<N2>::NumBlocks) ? rhs.data[i] : 0;
-        auto sum       = lhs.data[i] + rhs_block + carry;
-        // Detect overflow.
-        carry          = (sum < lhs.data[i]);
-
-        lhs.data[i] = sum;
-    }
-
-    return lhs;
+    return detail::sum_inplace(lhs, rhs);
 }
 
 /// @brief Computes the sum of a BitVector and an integer, modifying the BitVector.
@@ -907,7 +935,17 @@ inline auto operator+=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVecto
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator+=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 {
-    return (lhs += BitVector<N>(rhs));
+    return detail::sum_inplace(lhs, BitVector<N>(rhs));
+}
+
+/// @brief Computes the sum of a BitVector and an integer, modifying the BitVector.
+/// @param lhs The BitVector.
+/// @param rhs The integer value.
+/// @return The sum stored in lhs.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator+=(T &lhs, const BitVector<N> &rhs) -> T &
+{
+    return (lhs = detail::sum(BitVector<N>(lhs), rhs).template to_number<T>());
 }
 
 /// @brief Increments the BitVector by 1 (prefix).
@@ -916,7 +954,7 @@ inline auto operator+=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 template <std::size_t N>
 inline auto operator++(BitVector<N> &lhs) -> BitVector<N> &
 {
-    return lhs += 1;
+    return detail::sum_inplace(lhs, BitVector<N>(1));
 }
 
 /// @brief Increments the BitVector by 1 (postfix).
@@ -925,8 +963,8 @@ inline auto operator++(BitVector<N> &lhs) -> BitVector<N> &
 template <std::size_t N>
 inline auto operator++(BitVector<N> &lhs, int) -> BitVector<N>
 {
-    BitVector<N> temp = lhs;
-    lhs += 1;
+    BitVector<N> temp(lhs);
+    detail::sum_inplace(lhs, BitVector<N>(1));
     return temp;
 }
 
@@ -941,7 +979,7 @@ inline auto operator++(BitVector<N> &lhs, int) -> BitVector<N>
 template <std::size_t N1, std::size_t N2>
 inline auto operator-(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
 {
-    return bvlib::detail::sub(lhs, rhs);
+    return detail::sub(lhs, rhs);
 }
 
 /// @brief Computes the difference of a BitVector and an integer.
@@ -951,7 +989,7 @@ inline auto operator-(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> Bit
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator-(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 {
-    return bvlib::detail::sub(lhs, BitVector<N>(rhs));
+    return detail::sub(lhs, BitVector<N>(rhs));
 }
 
 /// @brief Computes the difference of an integer and a BitVector.
@@ -961,7 +999,7 @@ inline auto operator-(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator-(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 {
-    return bvlib::detail::sub(BitVector<N>(lhs), rhs);
+    return detail::sub(BitVector<N>(lhs), rhs);
 }
 
 /// @brief Computes the difference of two BitVectors and stores the result in the first BitVector.
@@ -971,19 +1009,7 @@ inline auto operator-(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 template <std::size_t N1, std::size_t N2>
 inline auto operator-=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
-    static_assert(N1 >= N2, "LHS must be at least as large as RHS");
-    bool borrow = false;
-
-    // Iterate block-wise for efficient subtraction.
-    for (std::size_t i = 0; i < BitVector<N1>::NumBlocks; ++i) {
-        auto rhs_block = (i < BitVector<N2>::NumBlocks) ? rhs.data[i] : 0;
-        auto diff      = lhs.data[i] - rhs_block - borrow;
-        borrow         = (lhs.data[i] < rhs_block + borrow); // Detect underflow
-
-        lhs.data[i] = diff;
-    }
-
-    return lhs;
+    return detail::sub_inplace(lhs, rhs);
 }
 
 /// @brief Computes the difference of a BitVector and an integer, modifying the BitVector.
@@ -993,7 +1019,17 @@ inline auto operator-=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVecto
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator-=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 {
-    return (lhs -= BitVector<N>(rhs));
+    return detail::sub_inplace(lhs, BitVector<N>(rhs));
+}
+
+/// @brief Computes the difference of an integer and a BitVector, modifying the integer.
+/// @param lhs The integer value.
+/// @param rhs The BitVector.
+/// @return The difference stored in lhs.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator-=(T &lhs, const BitVector<N> &rhs) -> T &
+{
+    return (lhs = detail::sub(BitVector<N>(lhs), rhs).template to_number<T>());
 }
 
 /// @brief Decrement the BitVector by 1 (prefix).
@@ -1002,7 +1038,7 @@ inline auto operator-=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 template <std::size_t N>
 inline auto operator--(BitVector<N> &lhs) -> BitVector<N> &
 {
-    return lhs -= 1;
+    return detail::sub_inplace(lhs, BitVector<N>(1));
 }
 
 /// @brief Decrement the BitVector by 1 (postfix).
@@ -1011,8 +1047,8 @@ inline auto operator--(BitVector<N> &lhs) -> BitVector<N> &
 template <std::size_t N>
 inline auto operator--(BitVector<N> &lhs, int) -> BitVector<N>
 {
-    BitVector<N> temp = lhs;
-    lhs -= 1;
+    BitVector<N> temp(lhs);
+    detail::sub_inplace(lhs, BitVector<N>(1));
     return temp;
 }
 
@@ -1027,7 +1063,7 @@ inline auto operator--(BitVector<N> &lhs, int) -> BitVector<N>
 template <std::size_t N1, std::size_t N2>
 inline auto operator*(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1 + N2>
 {
-    return bvlib::detail::mul(lhs, rhs);
+    return detail::mul(lhs, rhs);
 }
 
 /// @brief Multiplies a BitVector and an integer.
@@ -1037,7 +1073,7 @@ inline auto operator*(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> Bit
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator*(const BitVector<N> &lhs, T rhs) -> BitVector<N + N>
 {
-    return bvlib::detail::mul(lhs, BitVector<N>(rhs));
+    return detail::mul(lhs, BitVector<N>(rhs));
 }
 
 /// @brief Multiplies an integer and a BitVector.
@@ -1047,7 +1083,7 @@ inline auto operator*(const BitVector<N> &lhs, T rhs) -> BitVector<N + N>
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator*(T lhs, const BitVector<N> &rhs) -> BitVector<N + N>
 {
-    return bvlib::detail::mul(BitVector<N>(lhs), rhs);
+    return detail::mul(BitVector<N>(lhs), rhs);
 }
 
 /// @brief Multiplies two BitVectors using the * operator, storing the result in the first BitVector.
@@ -1057,7 +1093,7 @@ inline auto operator*(T lhs, const BitVector<N> &rhs) -> BitVector<N + N>
 template <std::size_t N1, std::size_t N2>
 inline auto operator*=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
-    return bvlib::detail::mul_inplace(lhs, rhs);
+    return detail::mul_inplace(lhs, rhs);
 }
 
 /// @brief Multiplies a BitVector and an integer, storing the result in the BitVector.
@@ -1067,7 +1103,7 @@ inline auto operator*=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVecto
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator*=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 {
-    return bvlib::detail::mul_inplace(lhs, BitVector<N>(rhs));
+    return detail::mul_inplace(lhs, BitVector<N>(rhs));
 }
 
 /// @brief Multiplies an integer and a BitVector, storing the result in the BitVector.
@@ -1077,7 +1113,7 @@ inline auto operator*=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator*=(T &lhs, const BitVector<N> &rhs) -> T &
 {
-    return (lhs = bvlib::detail::mul(rhs, BitVector<N>(lhs)).template to_number<T>());
+    return (lhs = detail::mul(BitVector<N>(lhs), rhs).template to_number<T>());
 }
 
 // ============================================================================
@@ -1091,7 +1127,7 @@ inline auto operator*=(T &lhs, const BitVector<N> &rhs) -> T &
 template <std::size_t N1, std::size_t N2>
 inline auto operator/(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1>
 {
-    return bvlib::detail::div(lhs, rhs).first;
+    return detail::div(lhs, rhs).first;
 }
 
 /// @brief Performs division between a BitVector and an integer.
@@ -1101,7 +1137,7 @@ inline auto operator/(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> Bit
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator/(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 {
-    return bvlib::detail::div(lhs, BitVector<N>(rhs)).first;
+    return detail::div(lhs, BitVector<N>(rhs)).first;
 }
 
 /// @brief Performs division between an integer and a BitVector.
@@ -1111,7 +1147,7 @@ inline auto operator/(const BitVector<N> &lhs, T rhs) -> BitVector<N>
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator/(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 {
-    return bvlib::detail::div(BitVector<N>(lhs), rhs).first;
+    return detail::div(BitVector<N>(lhs), rhs).first;
 }
 
 /// @brief Performs division using the /= operator.
@@ -1121,7 +1157,7 @@ inline auto operator/(T lhs, const BitVector<N> &rhs) -> BitVector<N>
 template <std::size_t N1, std::size_t N2>
 inline auto operator/=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
 {
-    return bvlib::detail::div_inplace(lhs, rhs).first;
+    return detail::div_inplace(lhs, rhs).first;
 }
 
 /// @brief Performs division between a BitVector and an integer using the /= operator.
@@ -1131,7 +1167,7 @@ inline auto operator/=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVecto
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator/=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 {
-    return bvlib::detail::div_inplace(lhs, BitVector<N>(rhs)).first;
+    return detail::div_inplace(lhs, BitVector<N>(rhs)).first;
 }
 
 /// @brief Performs division between an integer and a BitVector using the /= operator.
@@ -1141,7 +1177,293 @@ inline auto operator/=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
 template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 inline auto operator/=(T &lhs, const BitVector<N> &rhs) -> T &
 {
-    return (lhs = bvlib::detail::div(BitVector<N>(lhs), rhs).first.template to_number<T>());
+    return (lhs = detail::div(BitVector<N>(lhs), rhs).first.template to_number<T>());
+}
+
+// ============================================================================
+// BITWISE (&)
+// ============================================================================
+
+/// @brief Performs bitwise AND between two BitVectors.
+/// @param lhs The first BitVector.
+/// @param rhs The second BitVector.
+/// @return The result of the bitwise AND between the two BitVectors.
+template <std::size_t N1, std::size_t N2>
+inline auto operator&(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
+{
+    constexpr std::size_t num_blocks = std::min(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
+    using ResultType                 = BitVector<std::max(N1, N2)>;
+    using BlockType                  = typename ResultType::BlockType;
+    ResultType result;
+    // Perform bitwise AND on corresponding blocks.
+    for (std::size_t i = 0; i < num_blocks; ++i) {
+        result.data[i] = static_cast<BlockType>(lhs.data[i] & rhs.data[i]);
+    }
+    // Handle excess blocks if any (for unequal BitVector sizes).
+    if constexpr (BitVector<N1>::NumBlocks > BitVector<N2>::NumBlocks) {
+        // Only copy remaining blocks from lhs.
+        for (std::size_t i = BitVector<N2>::NumBlocks; i < BitVector<N1>::NumBlocks; ++i) {
+            result.data[i] = lhs.data[i];
+        }
+    } else if constexpr (BitVector<N2>::NumBlocks > BitVector<N1>::NumBlocks) {
+        // Only copy remaining blocks from rhs.
+        for (std::size_t i = BitVector<N1>::NumBlocks; i < BitVector<N2>::NumBlocks; ++i) {
+            result.data[i] = rhs.data[i];
+        }
+    }
+    return result;
+}
+
+/// @brief Performs bitwise AND between a BitVector and an integer.
+/// @param lhs The BitVector.
+/// @param rhs The integer value.
+/// @return The result of the bitwise AND between the BitVector and the integer.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator&(const BitVector<N> &lhs, T rhs) -> BitVector<N>
+{
+    return lhs & BitVector<N>(rhs);
+}
+
+/// @brief Performs bitwise AND between an integer and a BitVector.
+/// @param lhs The integer value.
+/// @param rhs The BitVector.
+/// @return The result of the bitwise AND between the integer and the BitVector.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator&(T lhs, const BitVector<N> &rhs) -> BitVector<N>
+{
+    return BitVector<N>(lhs) & rhs;
+}
+
+/// @brief Performs bitwise AND between two BitVectors.
+/// @param lhs The first BitVector.
+/// @param rhs The second BitVector.
+/// @return The result of the bitwise AND between the two BitVectors.
+template <std::size_t N1, std::size_t N2>
+inline auto operator&=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
+{
+    constexpr std::size_t num_blocks = std::min(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
+    using BlockType                  = typename BitVector<N1>::BlockType;
+    // Perform bitwise AND on corresponding blocks and update lhs.
+    for (std::size_t i = 0; i < num_blocks; ++i) {
+        lhs.data[i] = static_cast<BlockType>(lhs.data[i] & rhs.data[i]);
+    }
+    return lhs;
+}
+
+/// @brief Performs bitwise AND between a BitVector and an integer, modifying the BitVector.
+/// @param lhs The BitVector (will be modified).
+/// @param rhs The integer value.
+/// @return The modified BitVector.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator&=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
+{
+    lhs &= BitVector<N>(rhs);
+    return lhs;
+}
+
+/// @brief Performs bitwise AND between an integer and a BitVector, modifying the integer.
+/// @param lhs The integer value (will be modified).
+/// @param rhs The BitVector.
+/// @return The modified integer.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator&=(T &lhs, const BitVector<N> &rhs) -> T &
+{
+    return (lhs = (BitVector<N>(lhs) & rhs).template to_number<T>());
+}
+
+// ============================================================================
+// BITWISE (|)
+// ============================================================================
+
+/// @brief Performs bitwise OR between two BitVectors.
+/// @param lhs The first BitVector.
+/// @param rhs The second BitVector.
+/// @return The result of the bitwise OR between the two BitVectors.
+template <std::size_t N1, std::size_t N2>
+inline auto operator|(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
+{
+    constexpr std::size_t num_blocks = std::min(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
+    using ResultType                 = BitVector<std::max(N1, N2)>;
+    using BlockType                  = typename ResultType::BlockType;
+    ResultType result;
+    // Perform bitwise OR on corresponding blocks.
+    for (std::size_t i = 0; i < num_blocks; ++i) {
+        result.data[i] = static_cast<BlockType>(lhs.data[i] | rhs.data[i]);
+    }
+    // Handle excess blocks if any (for unequal BitVector sizes).
+    if constexpr (BitVector<N1>::NumBlocks > BitVector<N2>::NumBlocks) {
+        // Only copy remaining blocks from lhs.
+        for (std::size_t i = BitVector<N2>::NumBlocks; i < BitVector<N1>::NumBlocks; ++i) {
+            result.data[i] = lhs.data[i];
+        }
+    } else if constexpr (BitVector<N2>::NumBlocks > BitVector<N1>::NumBlocks) {
+        // Only copy remaining blocks from rhs.
+        for (std::size_t i = BitVector<N1>::NumBlocks; i < BitVector<N2>::NumBlocks; ++i) {
+            result.data[i] = rhs.data[i];
+        }
+    }
+    return result;
+}
+
+/// @brief Performs bitwise OR between a BitVector and an integer.
+/// @param lhs The BitVector.
+/// @param rhs The integer value.
+/// @return The result of the bitwise OR between the BitVector and the integer.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator|(const BitVector<N> &lhs, T rhs) -> BitVector<N>
+{
+    return lhs | BitVector<N>(rhs); // Use the BitVector & BitVector operator
+}
+
+/// @brief Performs bitwise OR between an integer and a BitVector.
+/// @param lhs The integer value.
+/// @param rhs The BitVector.
+/// @return The result of the bitwise OR between the integer and the BitVector.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator|(T lhs, const BitVector<N> &rhs) -> BitVector<N>
+{
+    return BitVector<N>(lhs) | rhs; // Use the BitVector & BitVector operator
+}
+
+/// @brief Performs bitwise OR between two BitVectors, modifying the first one.
+/// @param lhs The BitVector (will be modified).
+/// @param rhs The second BitVector.
+/// @return The modified lhs (result of the bitwise OR).
+template <std::size_t N1, std::size_t N2>
+inline auto operator|=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
+{
+    constexpr std::size_t num_blocks = std::min(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
+    using BlockType                  = typename BitVector<N1>::BlockType;
+    // Perform bitwise OR on corresponding blocks and update lhs.
+    for (std::size_t i = 0; i < num_blocks; ++i) {
+        lhs.data[i] = static_cast<BlockType>(lhs.data[i] | rhs.data[i]);
+    }
+    return lhs;
+}
+
+/// @brief Performs bitwise OR between a BitVector and an integer, modifying the BitVector.
+/// @param lhs The BitVector (will be modified).
+/// @param rhs The integer value.
+/// @return The modified BitVector.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator|=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
+{
+    lhs |= BitVector<N>(rhs);
+    return lhs;
+}
+
+/// @brief Performs bitwise OR between an integer and a BitVector, modifying the integer.
+/// @param lhs The integer value (will be modified).
+/// @param rhs The BitVector.
+/// @return The modified integer.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator|=(T &lhs, const BitVector<N> &rhs) -> T &
+{
+    return (lhs = (BitVector<N>(lhs) | rhs).template to_number<T>());
+}
+
+// ============================================================================
+// BITWISE (^)
+// ============================================================================
+
+/// @brief Performs bitwise XOR between two BitVectors.
+/// @param lhs The first BitVector.
+/// @param rhs The second BitVector.
+/// @return The result of the bitwise XOR between the two BitVectors.
+template <std::size_t N1, std::size_t N2>
+inline auto operator^(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<std::max(N1, N2)>
+{
+    constexpr std::size_t num_blocks = std::min(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
+    using ResultType                 = BitVector<std::max(N1, N2)>;
+    using BlockType                  = typename ResultType::BlockType;
+    ResultType result;
+    // Perform bitwise XOR on corresponding blocks.
+    for (std::size_t i = 0; i < num_blocks; ++i) {
+        result.data[i] = static_cast<BlockType>(lhs.data[i] ^ rhs.data[i]);
+    }
+    // Handle excess blocks if any (for unequal BitVector sizes).
+    if constexpr (BitVector<N1>::NumBlocks > BitVector<N2>::NumBlocks) {
+        // Only copy remaining blocks from lhs.
+        for (std::size_t i = BitVector<N2>::NumBlocks; i < BitVector<N1>::NumBlocks; ++i) {
+            result.data[i] = lhs.data[i];
+        }
+    } else if constexpr (BitVector<N2>::NumBlocks > BitVector<N1>::NumBlocks) {
+        // Only copy remaining blocks from rhs.
+        for (std::size_t i = BitVector<N1>::NumBlocks; i < BitVector<N2>::NumBlocks; ++i) {
+            result.data[i] = rhs.data[i];
+        }
+    }
+    return result;
+}
+
+/// @brief Performs bitwise XOR between a BitVector and an integer.
+/// @param lhs The BitVector.
+/// @param rhs The integer value.
+/// @return The result of the bitwise XOR between the BitVector and the integer.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator^(const BitVector<N> &lhs, T rhs) -> BitVector<N>
+{
+    return lhs ^ BitVector<N>(rhs); // Use the BitVector & BitVector operator
+}
+
+/// @brief Performs bitwise XOR between an integer and a BitVector.
+/// @param lhs The integer value.
+/// @param rhs The BitVector.
+/// @return The result of the bitwise XOR between the integer and the BitVector.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator^(T lhs, const BitVector<N> &rhs) -> BitVector<N>
+{
+    return BitVector<N>(lhs) ^ rhs; // Use the BitVector & BitVector operator
+}
+
+/// @brief Performs bitwise XOR between two BitVectors, modifying the first one.
+/// @param lhs The BitVector (will be modified).
+/// @param rhs The second BitVector.
+/// @return The modified lhs (result of the bitwise XOR).
+template <std::size_t N1, std::size_t N2>
+inline auto operator^=(BitVector<N1> &lhs, const BitVector<N2> &rhs) -> BitVector<N1> &
+{
+    constexpr std::size_t num_blocks = std::min(BitVector<N1>::NumBlocks, BitVector<N2>::NumBlocks);
+    using BlockType                  = typename BitVector<N1>::BlockType;
+    // Perform bitwise XOR on corresponding blocks and update lhs.
+    for (std::size_t i = 0; i < num_blocks; ++i) {
+        lhs.data[i] = static_cast<BlockType>(lhs.data[i] ^ rhs.data[i]);
+    }
+    return lhs;
+}
+
+/// @brief Performs bitwise XOR between a BitVector and an integer, modifying the BitVector.
+/// @param lhs The BitVector (will be modified).
+/// @param rhs The integer value.
+/// @return The modified BitVector.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator^=(BitVector<N> &lhs, T rhs) -> BitVector<N> &
+{
+    lhs ^= BitVector<N>(rhs);
+    return lhs;
+}
+
+/// @brief Performs bitwise XOR between an integer and a BitVector, modifying the integer.
+/// @param lhs The integer value (will be modified).
+/// @param rhs The BitVector.
+/// @return The modified integer.
+template <std::size_t N, typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
+inline auto operator^=(T &lhs, const BitVector<N> &rhs) -> T &
+{
+    return (lhs = (BitVector<N>(lhs) ^ rhs).template to_number<T>());
+}
+
+// ============================================================================
+// BITWISE (~)
+// ============================================================================
+
+/// @brief Performs bitwise negation.
+/// @param bv The BitVector.
+/// @return The result of the bitwise negation.
+template <std::size_t N>
+inline auto operator~(const BitVector<N> &bv) -> BitVector<N>
+{
+    return BitVector<N>(bv).flip();
 }
 
 } // namespace bvlib
