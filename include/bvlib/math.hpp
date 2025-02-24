@@ -597,7 +597,6 @@ inline auto op_equal_or_unequal(const BitVector<N1> &lhs, const BitVector<N2> &r
 ///
 /// @param lhs The first BitVector.
 /// @param rhs The second BitVector.
-/// @param check_equality If enabled, the scenario lhs == rhs will return true.
 ///
 /// @return True if the first value is smaller than the second.
 ///         - If `CheckEquality` is true, returns true if `lhs == rhs`.
@@ -651,7 +650,6 @@ inline auto op_lesser_than(const BitVector<N1> &lhs, const BitVector<N2> &rhs) -
 ///
 /// @param lhs The first BitVector.
 /// @param rhs The second BitVector.
-/// @param check_equality If enabled, the scenario lhs == rhs will return true.
 ///
 /// @return True if the first BitVector is greater than the second.
 ///         - If `CheckEquality` is true, returns true if `lhs == rhs`.
