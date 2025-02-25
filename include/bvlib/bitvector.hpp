@@ -283,15 +283,14 @@ public:
     auto set(std::size_t pos) -> BitVector<N> &
     {
         if (pos >= N) {
-            throw std::out_of_range("Bit position out of range.");
+            throw std::out_of_range(
+                "Accessing bit outside range (" + std::to_string(pos) + " >= " + std::to_string(N) + ")");
         }
         // Get the block index and bit position for the given position.
         std::size_t block = get_block_index(pos);
         std::size_t bit   = get_bit_position(pos);
-
         // Set the bit at the calculated position.
         data[block] |= static_cast<BlockType>(BlockType(1) << bit);
-
         return *this;
     }
 
@@ -311,14 +310,14 @@ public:
     auto reset(std::size_t pos) -> BitVector<N> &
     {
         if (pos >= N) {
-            throw std::out_of_range("Bit position out of range");
+            throw std::out_of_range(
+                "Accessing bit outside range (" + std::to_string(pos) + " >= " + std::to_string(N) + ")");
         }
         // Get the block index and bit position for the given position.
         std::size_t block = get_block_index(pos);
         std::size_t bit   = get_bit_position(pos);
-
         // Reset the bit at the calculated position.
-        data[block] = static_cast<BlockType>(data[block] & ~(1U << bit));
+        data[block]       = static_cast<BlockType>(data[block] & ~(1U << bit));
         return *this;
     }
 
@@ -352,14 +351,14 @@ public:
     auto flip(std::size_t pos) -> BitVector<N> &
     {
         if (pos >= N) {
-            throw std::out_of_range("BitVector index out of range");
+            throw std::out_of_range(
+                "Accessing bit outside range (" + std::to_string(pos) + " >= " + std::to_string(N) + ")");
         }
         // Get the block index and bit position for the given position.
         std::size_t block = get_block_index(pos);
         std::size_t bit   = get_bit_position(pos);
-
         // Flip the bit at the calculated position.
-        data[block] = static_cast<BlockType>(data[block] ^ (1 << bit));
+        data[block]       = static_cast<BlockType>(data[block] ^ (1 << bit));
         return *this;
     }
 
@@ -442,11 +441,8 @@ public:
     auto swap(std::size_t lhs, std::size_t rhs) noexcept -> BitVector<N> &
     {
         try {
-            if ((lhs >= N) || (rhs >= N)) {
-                throw std::out_of_range("BitVector index out of range");
-            }
-            bool bit_lhs = at(lhs);
-            bool bit_rhs = at(rhs);
+            bool bit_lhs = this->at(lhs);
+            bool bit_rhs = this->at(rhs);
             // Swap the bits if they differ.
             if (bit_lhs != bit_rhs) {
                 if (bit_lhs) {
@@ -521,12 +517,12 @@ public:
     auto at(std::size_t pos) const -> bool
     {
         if (pos >= N) {
-            throw std::out_of_range("Accessing values outside bitvector");
+            throw std::out_of_range(
+                "Accessing bit outside range (" + std::to_string(pos) + " >= " + std::to_string(N) + ")");
         }
         // Get the block index and bit position for the given position.
         std::size_t block = get_block_index(pos);
         std::size_t bit   = get_bit_position(pos);
-
         // Return the bit at the calculated position.
         return (data[block] & (BlockType(1) << bit)) != 0;
     }
@@ -537,12 +533,12 @@ public:
     auto at(std::size_t pos) -> detail::BitReference<BlockType>
     {
         if (pos >= N) {
-            throw std::out_of_range("Accessing values outside bitvector");
+            throw std::out_of_range(
+                "Accessing bit outside range (" + std::to_string(pos) + " >= " + std::to_string(N) + ")");
         }
         // Get the block index and bit position for the given position.
         std::size_t block = get_block_index(pos);
         std::size_t bit   = get_bit_position(pos);
-
         // Return the bit reference at the calculated position.
         return detail::BitReference<BlockType>(data[block], bit);
     }

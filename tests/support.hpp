@@ -10,6 +10,7 @@
 #include "bvlib/bitvector.hpp"
 #include "bvlib/io.hpp"
 #include "bvlib/math.hpp"
+#include "bvlib/view.hpp"
 
 // Generic helper function for binary functions.
 template <typename Function, typename T1, typename T2, typename ResultType>

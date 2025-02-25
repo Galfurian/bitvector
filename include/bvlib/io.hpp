@@ -11,6 +11,7 @@
 #include <sstream>
 
 #include "bvlib/bitvector.hpp"
+#include "bvlib/view.hpp"
 
 /// @brief Overloads the stream insertion operator for BitVector to an output stream (std::ostream).
 /// @param lhs The output stream to which the BitVector will be written.
@@ -29,6 +30,28 @@ auto operator<<(std::ostream &lhs, const bvlib::BitVector<N> &rhs) -> std::ostre
 /// @return The string stream after the BitVector has been written.
 template <std::size_t N>
 auto operator<<(std::stringstream &lhs, const bvlib::BitVector<N> &rhs) -> std::stringstream &
+{
+    lhs << rhs.to_string();
+    return lhs;
+}
+
+/// @brief Overloads the stream insertion operator for View to an output stream (std::ostream).
+/// @param lhs The output stream to which the View will be written.
+/// @param rhs The View to be written to the output stream.
+/// @return The output stream after the View has been written.
+template <std::size_t Start, std::size_t End, std::size_t N>
+auto operator<<(std::ostream &lhs, const bvlib::View<Start, End, N> &rhs) -> std::ostream &
+{
+    lhs << rhs.to_string();
+    return lhs;
+}
+
+/// @brief Overloads the stream insertion operator for View to a string stream (std::stringstream).
+/// @param lhs The string stream to which the View will be written.
+/// @param rhs The View to be written to the string stream.
+/// @return The string stream after the View has been written.
+template <std::size_t Start, std::size_t End, std::size_t N>
+auto operator<<(std::stringstream &lhs, const bvlib::View<Start, End, N> &rhs) -> std::stringstream &
 {
     lhs << rhs.to_string();
     return lhs;
