@@ -37,4 +37,6 @@ cmake-build-*
 
 # Other folders
 .vscode
+.venv
 build
+site
